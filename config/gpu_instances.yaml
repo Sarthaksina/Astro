@@ -1,0 +1,88 @@
+# GPU Instance Configuration for Cosmic Market Oracle
+
+# Default provider (vast.ai or thunderstorm)
+provider: "vast.ai"
+
+# Directory to store instance information
+instances_dir: "./instances"
+
+# Instance type configurations
+instance_types:
+  # RTX 4090 configuration for deep learning model training
+  rtx4090:
+    gpu_count: 1
+    cpu_count: 8
+    memory: 32  # GB
+    disk: 100    # GB
+    image: "nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04"
+    hourly_cost_max: 0.60  # Maximum hourly cost in USD
+    spot_instance: true     # Use spot instances for cost savings
+    
+  # A100 configuration for intensive training tasks
+  a100:
+    gpu_count: 1
+    cpu_count: 16
+    memory: 64  # GB
+    disk: 200   # GB
+    image: "nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04"
+    hourly_cost_max: 1.50  # Maximum hourly cost in USD
+    spot_instance: false    # Use on-demand for reliability
+    
+  # RTX 3080 configuration for data preprocessing
+  rtx3080:
+    gpu_count: 1
+    cpu_count: 6
+    memory: 16  # GB
+    disk: 50    # GB
+    image: "nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04"
+    hourly_cost_max: 0.40  # Maximum hourly cost in USD
+    spot_instance: true     # Use spot instances for cost savings
+    
+  # Multi-GPU configuration for reinforcement learning
+  multi_gpu:
+    gpu_count: 4
+    gpu_type: "rtx3080"
+    cpu_count: 16
+    memory: 64  # GB
+    disk: 200   # GB
+    image: "nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04"
+    hourly_cost_max: 1.80  # Maximum hourly cost in USD
+    spot_instance: false    # Use on-demand for reliability
+
+# Scheduling preferences
+scheduling:
+  # Preferred hours for intensive workloads (lower cost periods)
+  preferred_hours:
+    - start: "22:00"
+      end: "08:00"
+      days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  
+  # Maximum runtime for different job types
+  max_runtime:
+    training: 72    # hours
+    preprocessing: 24  # hours
+    inference: 8     # hours
+
+# Monitoring configuration
+monitoring:
+  # Utilization threshold below which to stop instances
+  utilization_threshold: 0.1
+  # Monitoring interval in seconds
+  interval: 300
+  # Metrics to collect
+  metrics:
+    - gpu_utilization
+    - memory_utilization
+    - power_usage
+    - cost_per_hour
+
+# Backup configuration
+backup:
+  # Enable automatic backups
+  enabled: true
+  # Backup interval in hours
+  interval: 6
+  # Number of backups to keep
+  keep_count: 5
+  # Storage location
+  storage: "s3://cosmic-market-oracle-backups"

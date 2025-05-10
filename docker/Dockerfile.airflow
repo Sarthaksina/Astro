@@ -1,0 +1,40 @@
+# Base image
+FROM apache/airflow:2.6.3-python3.10
+
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    wget \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+
+# Install Python dependencies
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Install astronomical libraries
+RUN pip install --no-cache-dir \
+    pyephem \
+    skyfield \
+    astropy \
+    jplephem \
+    swisseph
+
+# Install TimescaleDB adapter
+RUN pip install --no-cache-dir \
+    psycopg2-binary \
+    sqlalchemy-timescaledb
+
+# Set up Airflow configuration
+ENV AIRFLOW__CORE__LOAD_EXAMPLES=False \
+    AIRFLOW__CORE__EXECUTOR=LocalExecutor
+
+# Initialize Airflow
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["airflow", "webserver"]
