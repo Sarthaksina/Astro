@@ -1,7 +1,7 @@
 \"""Cloud GPU Instance Manager for Cosmic Market Oracle.
 
 This module provides a unified interface for managing cloud GPU instances
-across different providers (VAST.ai, ThunderStorm) with automated deployment,
+across different providers (VAST.ai, ThunderCompute) with automated deployment,
 monitoring, and cost optimization.
 """
 
@@ -17,8 +17,9 @@ from datetime import datetime, timedelta
 import subprocess
 import threading
 
-# Import VAST.ai manager
+# Import provider managers
 from infrastructure.cloud_gpu.vast_ai_manager import get_vast_ai_manager
+from infrastructure.cloud_gpu.thunder_compute_manager import get_thunder_compute_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -85,9 +86,14 @@ class CloudGPUManager:
             except Exception as e:
                 logger.error(f"Failed to initialize VAST.ai manager: {e}")
         
-        # Initialize ThunderStorm manager (placeholder for future implementation)
-        if self.default_provider == "thunderstorm":
-            logger.warning("ThunderStorm provider not yet implemented")
+        # Initialize ThunderCompute manager
+        if self.default_provider == "thundercompute":
+            try:
+                self.providers["thundercompute"] = get_thunder_compute_manager(self.config_path)
+                logger.info("Initialized ThunderCompute manager")
+            except Exception as e:
+                logger.error(f"Failed to initialize ThunderCompute manager: {e}")
+
     
     def create_instance(self, instance_type: str, provider: Optional[str] = None, 
                        docker_image: Optional[str] = None, onstart_script: Optional[str] = None) -> Optional[str]:

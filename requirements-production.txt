@@ -1,0 +1,65 @@
+# Cosmic Market Oracle - Production Dependencies
+
+# Core API Framework
+fastapi>=0.95.0
+uvicorn>=0.21.0
+gunicorn>=20.1.0
+pydantic>=1.10.7
+starlette>=0.26.1
+python-multipart>=0.0.6
+
+# Data Processing & Analysis
+pandas>=1.5.3
+numpy>=1.24.2
+scipy>=1.10.1
+matplotlib>=3.7.1
+seaborn>=0.12.2
+
+# Machine Learning & Deep Learning
+torch>=2.0.0
+torchvision>=0.15.1
+xgboost>=1.7.4
+scikit-learn>=1.2.2
+lightgbm>=3.3.5
+catboost>=1.1.1
+
+# Database & Storage
+sqlalchemy>=2.0.7
+psycopg2-binary>=2.9.5  # PostgreSQL adapter for TimescaleDB
+alembic>=1.10.3  # Database migrations
+
+# Astrological Calculations
+pyswisseph>=2.10.3  # Swiss Ephemeris Python bindings
+
+# Workflow Orchestration & MLOps
+mlflow>=2.2.2
+
+# Security
+python-jose[cryptography]>=3.3.0  # JWT tokens
+passlib[bcrypt]>=1.7.4  # Password hashing
+httpx>=0.23.3  # HTTP client
+
+# Monitoring & Logging
+prometheus-client>=0.16.0
+python-json-logger>=2.0.7
+opentelemetry-api>=1.15.0
+opentelemetry-sdk>=1.15.0
+opentelemetry-exporter-otlp>=1.15.0
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+joblib>=1.2.0
+requests>=2.28.2
+pyyaml>=6.0
+tenacity>=8.2.2  # For retries
+cachetools>=5.3.0  # For caching
+
+# Testing
+pytest>=7.3.1
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+httpx>=0.23.3
+
+# AWS Integration (for cloud deployment)
+boto3>=1.26.115

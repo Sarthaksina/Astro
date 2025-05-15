@@ -1,0 +1,164 @@
+# Cosmic Market Oracle - Model Configuration
+
+# General settings
+general:
+  seed: 42
+  device: auto  # auto, cuda, or cpu
+  precision: float32  # float32, float16, bfloat16
+
+# Data settings
+data:
+  sequence_length: 90
+  prediction_horizon: 5
+  batch_size: 64
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+  normalize: true
+  include_time_features: true
+  include_technical_indicators: true
+  include_planetary_positions: true
+  include_planetary_aspects: true
+  include_nakshatras: true
+
+# Feature settings
+features:
+  market:
+    price_features: true
+    volume_features: true
+    volatility_features: true
+    momentum_features: true
+    technical_indicators:
+      - rsi
+      - macd
+      - bollinger_bands
+      - stochastic_oscillator
+      - obv
+  astrological:
+    planets:
+      - sun
+      - moon
+      - mercury
+      - venus
+      - mars
+      - jupiter
+      - saturn
+      - uranus
+      - neptune
+      - pluto
+      - rahu
+      - ketu
+    aspects:
+      - conjunction
+      - opposition
+      - trine
+      - square
+      - sextile
+    house_systems:
+      - whole_sign
+      - equal_house
+    use_nakshatra: true
+    use_retrograde: true
+    use_combustion: true
+    use_dignity: true
+
+# Model settings
+model:
+  type: ensemble  # lstm, tcn, transformer, gnn, hybrid, ensemble
+  embedding_dim: 128
+  dropout: 0.2
+  use_attention: true
+  use_residual: true
+  activation: gelu  # relu, gelu, swish, mish
+  output_activation: tanh  # linear, sigmoid, tanh
+  loss_function: mse  # mse, mae, huber, quantile
+
+# Model-specific settings
+lstm:
+  hidden_size: 256
+  num_layers: 3
+  bidirectional: true
+  attention_heads: 4
+
+tcn:
+  num_channels: [64, 128, 256]
+  kernel_size: 3
+  dropout: 0.2
+  use_skip_connections: true
+
+transformer:
+  num_heads: 8
+  num_layers: 4
+  dim_feedforward: 512
+  positional_encoding: true
+  max_sequence_length: 1000
+
+gnn:
+  gnn_type: gat  # gcn, gat, graphsage
+  gnn_layers: 3
+  gnn_hidden_dim: 128
+  aggregation: mean  # sum, mean, max
+  use_edge_features: true
+  graph_construction: distance  # distance, threshold, knn
+
+hybrid:
+  cnn_filters: 64
+  cnn_kernel_size: 3
+  transformer_heads: 4
+  transformer_layers: 2
+  use_residual: true
+
+ensemble:
+  models:
+    - transformer
+    - gnn
+    - lstm
+  aggregation: weighted  # mean, weighted, stacking
+  weights: [0.4, 0.3, 0.3]  # Only used if aggregation is weighted
+
+# Training settings
+training:
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: adamw  # adam, adamw, sgd, rmsprop
+  scheduler: cosine  # cosine, plateau, step, none
+  early_stopping_patience: 10
+  gradient_clipping: 1.0
+  use_mixed_precision: false
+  use_gradient_accumulation: false
+  gradient_accumulation_steps: 4
+
+# Hyperparameter tuning
+hyperparameter_tuning:
+  framework: optuna  # optuna, ray
+  n_trials: 100
+  timeout: 86400  # 24 hours in seconds
+  pruner: median  # median, successive_halving, hyperband
+  sampler: tpe  # tpe, random, grid, cmaes
+  direction: maximize  # maximize, minimize
+  metric: val_accuracy  # val_loss, val_accuracy, val_f1, val_rmse
+  n_jobs: -1  # -1 means use all available cores
+  use_mlflow: true
+
+# MLflow settings
+mlflow:
+  tracking_uri: http://localhost:5000
+  experiment_name: cosmic_market_oracle
+  run_name: null  # If null, a timestamp will be used
+  log_artifacts: true
+  log_model: true
+  register_model: true
+  model_name: cosmic_market_oracle
+  tags:
+    project: cosmic_market_oracle
+    version: 1.0.0
+
+# Inference settings
+inference:
+  batch_size: 32
+  use_onnx: true
+  confidence_threshold: 0.6
+  export_format: onnx  # pytorch, onnx, torchscript
+  quantize: false
+  optimize: true

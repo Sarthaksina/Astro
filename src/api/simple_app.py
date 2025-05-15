@@ -1,24 +1,26 @@
-# Cosmic Market Oracle - Main API Application
+#!/usr/bin/env python
+# Cosmic Market Oracle - Simplified API Application for Testing
+
+"""
+Simplified API Application for the Cosmic Market Oracle.
+
+This module provides a basic API server for testing purposes,
+without dependencies on the full astrological engine.
+"""
 
 import os
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Request
+import datetime
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Union
-import datetime
 import time
-
-from src.utils.logger import setup_logger
-from src.astro_engine.planetary_positions import PlanetaryCalculator
-
-# Configure logging
-logger = setup_logger("api")
 
 # Create FastAPI application
 app = FastAPI(
-    title="Cosmic Market Oracle API",
+    title="Cosmic Market Oracle API (Simplified)",
     description="AI-powered financial forecasting system integrating Vedic astrology with market data",
     version="0.1.0",
 )
@@ -32,23 +34,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize planetary calculator
-planetary_calculator = PlanetaryCalculator()
+# Configure basic logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("api")
 
 # Define API models
-class PlanetaryPosition(BaseModel):
-    """Model for planetary position data"""
-    longitude: float
-    latitude: float
-    distance: float
-    longitude_speed: float
-    latitude_speed: float
-    distance_speed: float
-    is_retrograde: bool
-    nakshatra: int
-    nakshatra_degree: float
-
-
 class MarketPrediction(BaseModel):
     """Model for market prediction results"""
     date: datetime.date
@@ -109,52 +102,11 @@ async def root():
     """Root endpoint providing API information"""
     logger.info("Root endpoint accessed")
     return {
-        "name": "Cosmic Market Oracle API",
+        "name": "Cosmic Market Oracle API (Simplified)",
         "version": "0.1.0",
         "description": "AI-powered financial forecasting system integrating Vedic astrology with market data",
         "documentation": "/docs",
     }
-
-
-# Planetary positions endpoint
-@app.get("/planetary-positions/{date}", response_model=Dict[str, PlanetaryPosition])
-async def get_planetary_positions(date: str):
-    """Get planetary positions for a specific date"""
-    logger.info(f"Getting planetary positions for {date}")
-    
-    try:
-        # Parse date
-        parsed_date = datetime.datetime.fromisoformat(date)
-        
-        # Get planetary positions using the actual implementation
-        positions = planetary_calculator.get_all_planets(parsed_date)
-        
-        # Convert to response format
-        response = {}
-        for planet, position in positions.items():
-            # Map planet name to string
-            planet_name = planetary_calculator.get_planet_name(planet).lower()
-            
-            # Extract required fields
-            response[planet_name] = {
-                "longitude": position["longitude"],
-                "latitude": position["latitude"],
-                "distance": position["distance"],
-                "longitude_speed": position["longitude_speed"],
-                "latitude_speed": position.get("latitude_speed", 0.0),
-                "distance_speed": position.get("distance_speed", 0.0),
-                "is_retrograde": position["is_retrograde"],
-                "nakshatra": position["nakshatra"],
-                "nakshatra_degree": position.get("nakshatra_degree", 0.0)
-            }
-        
-        return response
-    except ValueError as e:
-        logger.error(f"Invalid date format: {date}")
-        raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
-    except Exception as e:
-        logger.error(f"Error getting planetary positions: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Market prediction endpoint
@@ -168,12 +120,6 @@ async def get_prediction(date: str):
         parsed_date = datetime.datetime.fromisoformat(date)
         
         # This is a placeholder - actual implementation would use the prediction pipeline
-        # In a real implementation, we would:
-        # 1. Check if we have a cached prediction for this date
-        # 2. If not, run the prediction pipeline to generate a prediction
-        # 3. Store the prediction in the cache
-        # 4. Return the prediction
-        
         # For now, return a placeholder response
         return {
             "date": parsed_date.date(),
@@ -197,11 +143,6 @@ async def get_prediction(date: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Include additional routes
-from .routes import router as additional_routes
-app.include_router(additional_routes)
-
-
 # Health check endpoint
 @app.get("/health")
 async def health_check():
@@ -213,8 +154,8 @@ if __name__ == "__main__":
     import uvicorn
     
     # Get host and port from environment variables or use defaults
-    host = os.environ.get("API_HOST", "0.0.0.0")
+    host = os.environ.get("API_HOST", "localhost")
     port = int(os.environ.get("API_PORT", 8000))
     
-    logger.info(f"Starting API server on {host}:{port}")
-    uvicorn.run("app:app", host=host, port=port, reload=True)
+    logger.info(f"Starting simplified API server on {host}:{port}")
+    uvicorn.run("simple_app:app", host=host, port=port, reload=True)

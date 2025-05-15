@@ -9,7 +9,9 @@ and other astrological phenomena relevant to financial markets.
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Optional, Union, Tuple
-from ..astro_engine.planetary_positions import PlanetaryCalculator, SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, URANUS, NEPTUNE, PLUTO, RAHU, KETU
+from ..astro_engine.planetary_positions import (PlanetaryCalculator, SUN, MOON, MERCURY, VENUS, MARS, 
+                                             JUPITER, SATURN, URANUS, NEPTUNE, PLUTO, RAHU, KETU,
+                                             analyze_market_trend, analyze_financial_yogas, get_planet_name)
 
 
 class AstrologicalFeatureGenerator:
@@ -158,15 +160,15 @@ class AstrologicalFeatureGenerator:
         
         return features
     
-    def generate_special_features(self, date) -> Dict[str, float]:
+    def generate_special_features(self, date):
         """
-        Generate special astrological features like yogas and sensitive points.
+        Generate special astrological features like yogas, sensitive points, and Vedic calculations.
         
         Args:
             date: The date to calculate features for
             
         Returns:
-            Dictionary of special features
+            Dictionary of special features including Vedic astrological insights
         """
         planets_data = self.calculator.get_all_planets(date, include_nodes=True)
         features = {}
@@ -207,6 +209,124 @@ class AstrologicalFeatureGenerator:
         modalities = self._calculate_modality_distribution(planets_data)
         for modality, value in modalities.items():
             features[f"modality_{modality}"] = value
+        
+        # ENHANCED VEDIC FEATURES
+        
+        # 1. Nakshatra features for Moon (most important for short-term market movements)
+        if MOON in planets_data:
+            moon_nakshatra = self.calculator.get_nakshatra_details(planets_data[MOON]["longitude"])
+            features["moon_nakshatra_name"] = float(moon_nakshatra["nakshatra"])  # Store as number for ML
+            features["moon_nakshatra_pada"] = float(moon_nakshatra["pada"])
+            
+            # Financial nature encoding (bullish=1.0, neutral=0.5, bearish=0.0, volatile=0.25)
+            financial_nature_map = {
+                "bullish": 1.0, 
+                "neutral": 0.5, 
+                "bearish": 0.0, 
+                "volatile": 0.25
+            }
+            features["moon_nakshatra_financial"] = financial_nature_map.get(
+                moon_nakshatra["financial_nature"], 0.5
+            )
+        
+        # 2. Nakshatra features for Sun (important for medium-term market trends)
+        if SUN in planets_data:
+            sun_nakshatra = self.calculator.get_nakshatra_details(planets_data[SUN]["longitude"])
+            features["sun_nakshatra_name"] = float(sun_nakshatra["nakshatra"])
+            features["sun_nakshatra_pada"] = float(sun_nakshatra["pada"])
+            
+            # Encode Sun nakshatra financial nature
+            financial_nature_map = {
+                "bullish": 1.0, 
+                "neutral": 0.5, 
+                "bearish": 0.0, 
+                "volatile": 0.25
+            }
+            features["sun_nakshatra_financial"] = financial_nature_map.get(
+                sun_nakshatra["financial_nature"], 0.5
+            )
+        
+        # 3. Vimshottari Dasha features (current major period lord)
+        # This is a simplified approach - in production we would need birth data
+        # Here we use the current date as a proxy for demonstration
+        moon_longitude = planets_data[MOON]["longitude"]
+        dasha_periods = self.calculator.calculate_vimshottari_dasha(moon_longitude, date)
+        
+        # Get current dasha lord (first key in the ordered dict)
+        if dasha_periods:
+            current_dasha_lord = list(dasha_periods.keys())[0]
+            dasha_lords_map = {
+                "Sun": 0, "Moon": 1, "Mars": 2, "Rahu": 3, "Jupiter": 4, 
+                "Saturn": 5, "Mercury": 6, "Ketu": 7, "Venus": 8
+            }
+            features["current_dasha_lord"] = float(dasha_lords_map.get(current_dasha_lord, 0))
+            
+            # Financial nature of dasha lords
+            dasha_financial_map = {
+                "Sun": 0.6,      # Moderately bullish
+                "Moon": 0.5,     # Neutral but volatile
+                "Mars": 0.3,     # Bearish
+                "Rahu": 0.25,    # Highly volatile
+                "Jupiter": 0.9,  # Strongly bullish
+                "Saturn": 0.2,   # Strongly bearish
+                "Mercury": 0.7,  # Moderately bullish
+                "Ketu": 0.3,     # Bearish and volatile
+                "Venus": 0.8     # Bullish
+            }
+            features["dasha_lord_financial"] = dasha_financial_map.get(current_dasha_lord, 0.5)
+        
+        # 4. Divisional chart positions (Varga charts) for key financial planets
+        financial_planets = [JUPITER, VENUS, MERCURY, SATURN]  # Key planets for financial analysis
+        varga_divisions = [9, 10]  # D9 (Navamsa) and D10 (Dasamsa) are most relevant for finance
+        
+        for planet_id in financial_planets:
+            if planet_id in planets_data:
+                longitude = planets_data[planet_id]["longitude"]
+                for division in varga_divisions:
+                    varga_longitude = self.calculator.calculate_divisional_chart(longitude, division)
+                    varga_sign = int(varga_longitude / 30)  # 0-11 for the 12 signs
+                    
+                    # Store the sign as a feature
+                    planet_name = self._get_planet_name(planet_id)
+                    features[f"{planet_name}_d{division}_sign"] = float(varga_sign)
+                    
+                    # Encode cyclical varga position
+                    sin_varga, cos_varga = self.encode_cyclical_feature([varga_longitude], 360)[0]
+                    features[f"{planet_name}_d{division}_sin"] = sin_varga
+                    features[f"{planet_name}_d{division}_cos"] = cos_varga
+        
+        # 5. Market trend analysis
+        market_trend = analyze_market_trend(planets_data, date, self.calculator)
+        
+        # Encode market trend direction
+        trend_map = {
+            "bullish": 1.0,
+            "neutral": 0.5,
+            "bearish": 0.0,
+            "volatile": 0.25
+        }
+        features["market_trend"] = trend_map.get(market_trend["primary_trend"], 0.5)
+        features["trend_strength"] = market_trend["strength"] / 100.0  # Normalize to 0-1
+        features["reversal_probability"] = market_trend["reversal_probability"] / 100.0  # Normalize to 0-1
+        
+        # 6. Financial yogas (combinations)
+        yogas = analyze_financial_yogas(planets_data, self.calculator)
+        
+        # Count yogas by impact type
+        bullish_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "bullish")
+        bearish_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "bearish")
+        volatile_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "volatile")
+        
+        features["bullish_yoga_count"] = float(bullish_yogas)
+        features["bearish_yoga_count"] = float(bearish_yogas)
+        features["volatile_yoga_count"] = float(volatile_yogas)
+        
+        # Average yoga strength
+        if yogas:
+            avg_yoga_strength = sum(yoga["strength"] for yoga in yogas) / len(yogas) / 100.0  # Normalize to 0-1
+            features["avg_yoga_strength"] = avg_yoga_strength
+        else:
+            features["avg_yoga_strength"] = 0.0
         
         return features
     

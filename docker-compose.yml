@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # API Service
+  api:
+    build: .
+    container_name: cosmic-market-oracle-api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-cosmic_market_oracle}
+      - EPHE_PATH=/app/data/ephemeris
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - mlflow
+    networks:
+      - cosmic-network
+
+  # Database Service (TimescaleDB)
+  db:
+    image: timescale/timescaledb:latest-pg14
+    container_name: cosmic-market-oracle-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-cosmic_market_oracle}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cosmic-network
+
+  # MLflow Tracking Server
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: cosmic-market-oracle-mlflow
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+    command: >
+      mlflow server 
+      --backend-store-uri postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-cosmic_market_oracle}
+      --default-artifact-root s3://mlflow/
+      --host 0.0.0.0
+    depends_on:
+      - db
+      - minio
+    networks:
+      - cosmic-network
+
+  # MinIO for artifact storage
+  minio:
+    image: minio/minio:latest
+    container_name: cosmic-market-oracle-minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - cosmic-network
+
+  # Nginx for API Gateway and SSL termination
+  nginx:
+    image: nginx:latest
+    container_name: cosmic-market-oracle-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - api
+      - mlflow
+    networks:
+      - cosmic-network
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  cosmic-network:
+    driver: bridge

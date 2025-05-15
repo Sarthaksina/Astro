@@ -15,6 +15,13 @@ from typing import Dict, List, Optional, Union, Any, Tuple
 # Import model implementations
 from src.models.time_series import AttentionBiLSTM, TemporalConvNet, WaveNetModel
 from src.models.transformers import AstroEconomicTransformer, AstroEventDetectionTransformer
+from src.models.advanced_architectures import (
+    TransformerModel,
+    GNNModel,
+    HybridCNNTransformerModel,
+    NeuralODEModel,
+    EnsembleModel
+)
 
 
 class ModelFactory:
@@ -49,6 +56,16 @@ class ModelFactory:
             return self._create_transformer_model()
         elif self.model_type == 'event_transformer':
             return self._create_event_transformer_model()
+        elif self.model_type == 'advanced_transformer':
+            return self._create_advanced_transformer_model()
+        elif self.model_type == 'gnn':
+            return self._create_gnn_model()
+        elif self.model_type == 'hybrid':
+            return self._create_hybrid_model()
+        elif self.model_type == 'neural_ode':
+            return self._create_neural_ode_model()
+        elif self.model_type == 'ensemble':
+            return self._create_ensemble_model()
         else:
             raise ValueError(f"Unknown model type: {self.model_type}")
     
@@ -152,6 +169,128 @@ class ModelFactory:
             max_seq_len=model_config.get('max_seq_len', 365),
             dropout=model_config.get('dropout', 0.1),
             num_features=model_config.get('num_features', 30)
+        )
+        
+        return model.to(self.device)
+        
+    def _create_advanced_transformer_model(self) -> TransformerModel:
+        """
+        Create and configure an advanced Transformer model with positional encoding.
+        
+        Returns:
+            Configured advanced transformer model
+        """
+        model_config = self.config.get('advanced_transformer_config', {})
+        
+        model = TransformerModel(
+            input_dim=model_config.get('input_dim', 64),
+            output_dim=model_config.get('output_dim', 1),
+            d_model=model_config.get('d_model', 128),
+            nhead=model_config.get('num_heads', 8),
+            num_layers=model_config.get('num_layers', 4),
+            dim_feedforward=model_config.get('dim_feedforward', 512),
+            dropout=model_config.get('dropout', 0.1),
+            activation=model_config.get('activation', 'gelu'),
+            max_seq_length=model_config.get('max_seq_length', 1000)
+        )
+        
+        return model.to(self.device)
+    
+    def _create_gnn_model(self) -> GNNModel:
+        """
+        Create and configure a Graph Neural Network model for planetary relationships.
+        
+        Returns:
+            Configured GNN model
+        """
+        model_config = self.config.get('gnn_config', {})
+        
+        model = GNNModel(
+            input_dim=model_config.get('input_dim', 32),
+            output_dim=model_config.get('output_dim', 1),
+            hidden_dim=model_config.get('hidden_dim', 128),
+            num_layers=model_config.get('num_layers', 3),
+            dropout=model_config.get('dropout', 0.2),
+            gnn_type=model_config.get('gnn_type', 'gat'),
+            aggregation=model_config.get('aggregation', 'mean'),
+            use_edge_features=model_config.get('use_edge_features', True),
+            graph_construction=model_config.get('graph_construction', 'distance')
+        )
+        
+        return model.to(self.device)
+    
+    def _create_hybrid_model(self) -> HybridCNNTransformerModel:
+        """
+        Create and configure a hybrid CNN-Transformer model.
+        
+        Returns:
+            Configured hybrid model
+        """
+        model_config = self.config.get('hybrid_config', {})
+        
+        model = HybridCNNTransformerModel(
+            input_dim=model_config.get('input_dim', 64),
+            output_dim=model_config.get('output_dim', 1),
+            cnn_filters=model_config.get('cnn_filters', 64),
+            cnn_kernel_size=model_config.get('cnn_kernel_size', 3),
+            transformer_dim=model_config.get('transformer_dim', 128),
+            transformer_heads=model_config.get('transformer_heads', 4),
+            transformer_layers=model_config.get('transformer_layers', 2),
+            dropout=model_config.get('dropout', 0.1),
+            use_residual=model_config.get('use_residual', True)
+        )
+        
+        return model.to(self.device)
+    
+    def _create_neural_ode_model(self) -> NeuralODEModel:
+        """
+        Create and configure a Neural ODE model for continuous-time dynamics.
+        
+        Returns:
+            Configured Neural ODE model
+        """
+        model_config = self.config.get('neural_ode_config', {})
+        
+        model = NeuralODEModel(
+            input_dim=model_config.get('input_dim', 64),
+            output_dim=model_config.get('output_dim', 1),
+            hidden_dim=model_config.get('hidden_dim', 128),
+            num_layers=model_config.get('num_layers', 3),
+            dropout=model_config.get('dropout', 0.1),
+            solver=model_config.get('solver', 'dopri5'),
+            rtol=model_config.get('rtol', 1e-3),
+            atol=model_config.get('atol', 1e-4)
+        )
+        
+        return model.to(self.device)
+    
+    def _create_ensemble_model(self) -> EnsembleModel:
+        """
+        Create and configure an ensemble model combining multiple architectures.
+        
+        Returns:
+            Configured ensemble model
+        """
+        model_config = self.config.get('ensemble_config', {})
+        
+        # Get model configurations for each sub-model
+        model_configs = {}
+        for model_name in model_config.get('models', ['transformer', 'gnn', 'hybrid']):
+            if model_name == 'transformer':
+                model_configs[model_name] = self.config.get('advanced_transformer_config', {})
+            elif model_name == 'gnn':
+                model_configs[model_name] = self.config.get('gnn_config', {})
+            elif model_name == 'hybrid':
+                model_configs[model_name] = self.config.get('hybrid_config', {})
+            elif model_name == 'neural_ode':
+                model_configs[model_name] = self.config.get('neural_ode_config', {})
+        
+        model = EnsembleModel(
+            input_dim=model_config.get('input_dim', 64),
+            output_dim=model_config.get('output_dim', 1),
+            model_configs=model_configs,
+            aggregation=model_config.get('aggregation', 'weighted'),
+            weights=model_config.get('weights', None)
         )
         
         return model.to(self.device)

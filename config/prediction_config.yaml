@@ -1,0 +1,81 @@
+# Cosmic Market Oracle - Prediction Configuration
+
+# Data acquisition settings
+data_source: "yahoo"  # Options: yahoo, alpha_vantage, csv
+default_symbol: "^DJI"  # Default market symbol to predict
+
+# Planetary calculation settings
+ephemeris_path: "${EPHE_PATH}"  # Path to Swiss Ephemeris files
+ayanamsa_mode: "lahiri"  # Ayanamsa (precession) calculation method
+
+# Feature generation settings
+feature_groups:
+  market_features:
+    enabled: true
+    include:
+      - price_derived
+      - volume_derived
+      - technical_indicators
+      - volatility_measures
+  
+  astrological_features:
+    enabled: true
+    include:
+      - planetary_positions
+      - aspects
+      - dignities
+      - nakshatras
+      - special_configurations
+  
+  interaction_features:
+    enabled: true
+    market_features:
+      - Returns
+      - Volatility_20d
+      - RSI
+      - MACD
+    astro_features:
+      - Sun_Moon_aspect
+      - Jupiter_Saturn_aspect
+      - Mars_longitude_sin
+      - Mars_longitude_cos
+
+# Model settings
+model:
+  type: "lstm"  # Options: lstm, tcn, transformer, ensemble
+  hyperparameters:
+    hidden_size: 128
+    num_layers: 2
+    dropout: 0.2
+    learning_rate: 0.001
+    batch_size: 32
+    sequence_length: 20
+  
+  training:
+    epochs: 100
+    early_stopping_patience: 10
+    validation_split: 0.15
+    test_split: 0.15
+
+# Prediction settings
+prediction:
+  horizon: 1  # Prediction horizon in days
+  confidence_threshold: 0.6  # Minimum confidence for actionable predictions
+  
+  # Factors to include in prediction explanation
+  explanation_factors:
+    - top_features
+    - key_aspects
+    - historical_patterns
+
+# Output settings
+output:
+  model_dir: "data/models"  # Directory to store trained models
+  prediction_dir: "data/predictions"  # Directory to store predictions
+  visualization_dir: "data/visualizations"  # Directory to store visualizations
+
+# MLflow settings
+mlflow:
+  tracking_uri: "${MLFLOW_TRACKING_URI}"
+  experiment_name: "cosmic_market_oracle"
+  register_models: true

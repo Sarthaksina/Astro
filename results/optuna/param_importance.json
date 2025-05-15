@@ -1,0 +1,9 @@
+{
+  "model_type": 100,
+  "learning_rate": 85,
+  "dropout": 65,
+  "num_layers": 55,
+  "hidden_dim": 45,
+  "batch_size": 35,
+  "attention_heads": 25
+}

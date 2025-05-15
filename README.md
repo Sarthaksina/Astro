@@ -6,11 +6,19 @@ An AI-powered financial forecasting system that integrates Vedic astrological pr
 
 This pioneering project fuses historical Dow Jones Industrial Average (DJI) data with Vedic astrological positions through advanced AI techniques to create a revolutionary market prediction system. By analyzing cosmic patterns that potentially influence market psychology and economic cycles, we aim to develop a robust system capable of identifying market inflection points with unprecedented accuracy.
 
+### Key Features
+
+- **Historical Data Integration**: Combines 200 years of market data with precise planetary positions
+- **Advanced Feature Engineering**: Converts complex astrological phenomena into ML-compatible inputs
+- **Multi-Modal Deep Learning**: Integrates time series, cyclical, and symbolic data
+- **Cloud GPU Infrastructure**: Optimized training on VAST.ai and ThunderCompute platforms
+- **Interpretable Predictions**: Explains market forecasts through astrological reasoning
+
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.10 (recommended, project is optimized for this version)
 - PostgreSQL with TimescaleDB extension (for time-series data storage)
 - GPU access for model training (local or cloud-based)
 
@@ -22,25 +30,54 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
    cd Astro
    ```
 
-2. Create and activate a virtual environment:
+2. Run the automated environment setup script:
+   ```bash
+   python scripts/setup/init_environment.py
+   ```
+   
+   This script will:
+   - Check Python version compatibility
+   - Create a virtual environment
+   - Install all dependencies
+   - Set up environment variables
+   - Create necessary data directories
+
+3. Activate the virtual environment:
    ```bash
    # On Windows
-   python -m venv venv
    .\venv\Scripts\activate
    
    # On macOS/Linux
-   python -m venv venv
    source venv/bin/activate
    ```
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+4. Configure the environment variables in the `.env` file:
+   ```
+   # Database Configuration
+   DB_USER=postgres
+   DB_PASSWORD=your_password
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=cosmic_market_oracle
+   
+   # Swiss Ephemeris Configuration
+   EPHE_PATH=./data/ephemeris
+   
+   # API Configuration
+   API_HOST=0.0.0.0
+   API_PORT=8000
+   
+   # MLflow Configuration
+   MLFLOW_TRACKING_URI=http://localhost:5000
+   
+   # Cloud GPU API Keys (if using cloud GPUs)
+   VAST_AI_API_KEY=your_vast_ai_key
+   THUNDER_COMPUTE_API_KEY=your_thunder_compute_key
    ```
 
-4. Install the package in development mode:
+5. Initialize the database:
    ```bash
-   pip install -e .
+   python scripts/setup/init_database.py
    ```
 
 ## Project Structure
@@ -72,6 +109,9 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 3. **Feature Engineering**: Conversion of astrological phenomena into ML-compatible inputs
 4. **Model Development**: Implementation of ensemble models combining multiple AI paradigms
 5. **Evaluation Framework**: Comprehensive testing across different market regimes
+6. **Prediction Pipeline**: End-to-end system for generating market predictions
+7. **API Server**: FastAPI-based interface for accessing predictions and data
+8. **Cloud GPU Management**: Automated infrastructure for cost-efficient model training
 
 ## Development Workflow
 
@@ -80,6 +120,62 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 3. Follow the architectural guidelines in `PLANNING.md`
 4. Create unit tests for all new functionality
 5. Document code with Google-style docstrings
+
+## Running the System
+
+### Using the Unified Command-Line Interface
+
+The Cosmic Market Oracle now features a unified command-line interface that works with Python 3.10. Use the provided batch script on Windows:
+
+```bash
+# Show available commands
+run_with_python310
+
+# Acquire data
+run_with_python310 data --start_date=2023-01-01 --end_date=2023-12-31 --symbol=^DJI
+
+# Run hyperparameter optimization
+run_with_python310 optimize --config=config/model_config.yaml
+
+# Generate predictions
+run_with_python310 predict --start_date=2023-01-01 --end_date=2023-01-31 --symbol=^DJI --model=best_model
+
+# Start MLflow UI for visualization
+run_with_python310 mlflow
+```
+
+The MLflow UI will be available at http://localhost:5000
+
+### Start the API Server
+
+```bash
+python -m src.api.app
+```
+
+The API will be available at http://localhost:8000 with interactive documentation at http://localhost:8000/docs
+
+### Manage Cloud GPU Instances
+
+```bash
+# Start a new GPU instance for training
+python scripts/setup/gpu_instance_manager.py start --instance_type=rtx4090 --job=training
+
+# Monitor GPU utilization and automatically stop idle instances
+python scripts/setup/gpu_instance_manager.py monitor --threshold=0.1 --interval=300
+```
+
+## Production Deployment
+
+For detailed instructions on deploying the Cosmic Market Oracle in a production environment, please refer to the [Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md).
+
+Key production features include:
+
+- **Containerization**: Docker-based deployment for consistency across environments
+- **Load Balancing**: Nginx configuration for SSL termination and load distribution
+- **Database Scaling**: TimescaleDB configuration for efficient time-series data storage
+- **Monitoring**: Prometheus, Grafana, and Loki for comprehensive observability
+- **Security**: API key authentication, rate limiting, and proper error handling
+- **CI/CD**: Automated testing and deployment pipeline with GitHub Actions
 
 ## License
 
@@ -90,3 +186,4 @@ This project is proprietary and confidential. All rights reserved.
 - Swiss Ephemeris for high-precision astronomical calculations
 - TimescaleDB for efficient time-series data storage
 - VAST.ai and ThunderStorm for cloud GPU infrastructure
+- Prometheus, Grafana, and Loki for monitoring infrastructure

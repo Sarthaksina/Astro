@@ -1,0 +1,3 @@
+@echo off
+echo Starting MLflow UI with Python 3.10...
+py -3.10 scripts/setup_and_run_mlflow.py

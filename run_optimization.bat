@@ -1,0 +1,3 @@
+@echo off
+echo Running optimization with Python 3.10...
+py -3.10 scripts/run_optimization.py %*

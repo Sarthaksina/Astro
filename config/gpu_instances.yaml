@@ -1,10 +1,16 @@
 # GPU Instance Configuration for Cosmic Market Oracle
 
-# Default provider (vast.ai or thunderstorm)
-provider: "vast.ai"
+# Default provider (vast.ai or thundercompute)
+provider: "thundercompute"
 
 # Directory to store instance information
 instances_dir: "./instances"
+
+# ThunderCompute configuration
+thundercompute:
+  api_key: "YOUR_API_KEY_HERE"  # Replace with actual API key or use environment variable THUNDERCOMPUTE_API_KEY
+  api_url: "https://api.thundercompute.com/v1"
+  ssh_key_path: "~/.ssh/thundercompute_rsa"
 
 # Instance type configurations
 instance_types:

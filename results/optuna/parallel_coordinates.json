@@ -1,0 +1,112 @@
+[
+  {
+    "trial": 17,
+    "accuracy": 0.95,
+    "model_type": "ensemble",
+    "learning_rate": 0.01,
+    "batch_size": 32,
+    "dropout": 0.3,
+    "hidden_dim": 256,
+    "num_layers": 3,
+    "attention_heads": 4
+  },
+  {
+    "trial": 23,
+    "accuracy": 0.95,
+    "model_type": "ensemble",
+    "learning_rate": 0.0003,
+    "batch_size": 16,
+    "dropout": 0.2,
+    "hidden_dim": 512,
+    "num_layers": 3,
+    "attention_heads": 4
+  },
+  {
+    "trial": 35,
+    "accuracy": 0.95,
+    "model_type": "ensemble",
+    "learning_rate": 0.003,
+    "batch_size": 16,
+    "dropout": 0.3,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "attention_heads": 8
+  },
+  {
+    "trial": 39,
+    "accuracy": 0.95,
+    "model_type": "hybrid",
+    "learning_rate": 0.0001,
+    "batch_size": 128,
+    "dropout": 0.2,
+    "hidden_dim": 64,
+    "num_layers": 2,
+    "attention_heads": 8
+  },
+  {
+    "trial": 49,
+    "accuracy": 0.9499963425337167,
+    "model_type": "transformer",
+    "learning_rate": 0.0003,
+    "batch_size": 64,
+    "dropout": 0.2,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "attention_heads": 8
+  },
+  {
+    "trial": 42,
+    "accuracy": 0.9493391671711288,
+    "model_type": "ensemble",
+    "learning_rate": 0.003,
+    "batch_size": 16,
+    "dropout": 0.2,
+    "hidden_dim": 256,
+    "num_layers": 3,
+    "attention_heads": 4
+  },
+  {
+    "trial": 22,
+    "accuracy": 0.9459411534617082,
+    "model_type": "ensemble",
+    "learning_rate": 0.01,
+    "batch_size": 32,
+    "dropout": 0.2,
+    "hidden_dim": 128,
+    "num_layers": 3,
+    "attention_heads": 8
+  },
+  {
+    "trial": 26,
+    "accuracy": 0.9454847795393299,
+    "model_type": "ensemble",
+    "learning_rate": 0.003,
+    "batch_size": 128,
+    "dropout": 0.4,
+    "hidden_dim": 128,
+    "num_layers": 3,
+    "attention_heads": 8
+  },
+  {
+    "trial": 44,
+    "accuracy": 0.9369706026854104,
+    "model_type": "ensemble",
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "dropout": 0.3,
+    "hidden_dim": 512,
+    "num_layers": 1,
+    "attention_heads": 8
+  },
+  {
+    "trial": 46,
+    "accuracy": 0.9207292216623304,
+    "model_type": "hybrid",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "hidden_dim": 64,
+    "num_layers": 4,
+    "attention_heads": 8
+  }
+]
