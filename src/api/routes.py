@@ -21,7 +21,7 @@ from pathlib import Path
 from src.pipeline.prediction_pipeline import PredictionPipeline
 from src.data_acquisition.market_data import fetch_historical_data
 from src.astro_engine.planetary_positions import PlanetaryCalculator
-from src.utils.logger import get_logger
+from src.utils.logging_config import get_logger
 
 # Configure logging
 logger = get_logger("api_routes")

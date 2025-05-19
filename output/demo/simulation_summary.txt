@@ -1,0 +1,10 @@
+COSMIC MARKET ORACLE - DEMO SIMULATION RESULTS
+==================================================
+
+Test Period: 
+Initial Investment: $10,000
+Final Value: $7,090.12
+Total Return: -29.10%
+Annualized Return: -9.37%
+Sharpe Ratio: -0.63
+Max Drawdown: -38.39%

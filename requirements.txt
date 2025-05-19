@@ -45,12 +45,12 @@ sqlalchemy==2.0.7
 psycopg2-binary==2.9.5  # PostgreSQL adapter for TimescaleDB
 psycopg==3.1.8  # Modern PostgreSQL adapter
 alembic==1.10.3  # Database migrations
-timescaledb-python==0.3.0  # TimescaleDB specific functionality
+timescaledb==0.0.2  # TimescaleDB specific functionality
 
 # =====================================================================
 # Astrological Calculations
 # =====================================================================
-pyswisseph==2.10.3  # Swiss Ephemeris Python bindings
+pyswisseph==2.8.0.post1  # Swiss Ephemeris for astronomical calculations
 jplephem==2.18  # JPL Ephemeris
 skyfield==1.45  # High-precision astronomy
 
