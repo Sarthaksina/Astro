@@ -19,9 +19,9 @@ from src.models.advanced_architectures import (
     TransformerModel,
     GNNModel,
     HybridCNNTransformerModel,
-    NeuralODEModel,
-    EnsembleModel
+    NeuralODEModel
 )
+from src.models.ensemble import EnsembleModel
 
 
 class ModelFactory:
@@ -65,7 +65,30 @@ class ModelFactory:
         elif self.model_type == 'neural_ode':
             return self._create_neural_ode_model()
         elif self.model_type == 'ensemble':
-            return self._create_ensemble_model()
+            # Create ensemble model directly using the EnsembleModel from ensemble.py
+            model_config = self.config.get('ensemble_config', {})
+            
+            # Get model configurations for each sub-model
+            model_configs = {}
+            for model_name in model_config.get('models', ['transformer', 'gnn', 'hybrid']):
+                if model_name == 'transformer':
+                    model_configs[model_name] = self.config.get('advanced_transformer_config', {})
+                elif model_name == 'gnn':
+                    model_configs[model_name] = self.config.get('gnn_config', {})
+                elif model_name == 'hybrid':
+                    model_configs[model_name] = self.config.get('hybrid_config', {})
+                elif model_name == 'neural_ode':
+                    model_configs[model_name] = self.config.get('neural_ode_config', {})
+            
+            model = EnsembleModel(
+                input_dim=model_config.get('input_dim', 64),
+                output_dim=model_config.get('output_dim', 1),
+                model_configs=model_configs,
+                aggregation=model_config.get('aggregation', 'weighted'),
+                weights=model_config.get('weights', None)
+            )
+            
+            return model.to(self.device)
         else:
             raise ValueError(f"Unknown model type: {self.model_type}")
     
@@ -264,36 +287,7 @@ class ModelFactory:
         
         return model.to(self.device)
     
-    def _create_ensemble_model(self) -> EnsembleModel:
-        """
-        Create and configure an ensemble model combining multiple architectures.
-        
-        Returns:
-            Configured ensemble model
-        """
-        model_config = self.config.get('ensemble_config', {})
-        
-        # Get model configurations for each sub-model
-        model_configs = {}
-        for model_name in model_config.get('models', ['transformer', 'gnn', 'hybrid']):
-            if model_name == 'transformer':
-                model_configs[model_name] = self.config.get('advanced_transformer_config', {})
-            elif model_name == 'gnn':
-                model_configs[model_name] = self.config.get('gnn_config', {})
-            elif model_name == 'hybrid':
-                model_configs[model_name] = self.config.get('hybrid_config', {})
-            elif model_name == 'neural_ode':
-                model_configs[model_name] = self.config.get('neural_ode_config', {})
-        
-        model = EnsembleModel(
-            input_dim=model_config.get('input_dim', 64),
-            output_dim=model_config.get('output_dim', 1),
-            model_configs=model_configs,
-            aggregation=model_config.get('aggregation', 'weighted'),
-            weights=model_config.get('weights', None)
-        )
-        
-        return model.to(self.device)
+    # _create_ensemble_model method removed - now directly using EnsembleModel from ensemble.py in create_model method
 
 
 def create_model_from_config(config: Dict) -> torch.nn.Module:

@@ -11,6 +11,8 @@ import json
 import time
 import numpy as np
 import torch
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 
 # Configure benchmark parameters
 DATASET_SIZES = [1000000, 5000000, 10000000]  # Number of samples

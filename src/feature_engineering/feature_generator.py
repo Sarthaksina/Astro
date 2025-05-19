@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from .astrological_features import AstrologicalFeatureGenerator
 from .market_features import MarketFeatureGenerator
 from ..astro_engine.planetary_positions import PlanetaryCalculator
+from ..astro_engine.constants import get_planet_name, SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -96,12 +97,19 @@ class FeatureGenerator:
             'return_5d', 'return_20d', 'volume_change_ratio'
         ]
         
-        # Select key astrological features
+        # Select key astrological features using planet names
         astro_cols = [
-            'sun_moon_angle', 'jupiter_saturn_angle',
+            f'{get_planet_name(planet1)}_{get_planet_name(planet2)}_angle'
+            for planet1 in [SUN, JUPITER, SATURN]
+            for planet2 in [MOON, VENUS, MARS]
+            if planet1 < planet2  # Avoid duplicate pairs
+        ]
+        
+        # Add additional important astrological features
+        astro_cols.extend([
             'mars_saturn_angle', 'element_fire', 'element_earth',
             'modality_cardinal', 'modality_fixed'
-        ]
+        ])
         
         # Create interaction features for key combinations
         for market_col in market_cols:

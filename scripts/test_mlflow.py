@@ -11,6 +11,8 @@ import numpy as np
 import mlflow
 from pathlib import Path
 import matplotlib.pyplot as plt
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 
 # Add project root to path
 project_root = Path(__file__).resolve().parents[1]

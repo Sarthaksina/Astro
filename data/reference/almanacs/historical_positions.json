@@ -1,0 +1,114 @@
+{
+    "description": "Historical planetary positions from verified almanacs for testing the Vedic Astronomical Engine",
+    "source": "Lahiri's Indian Ephemeris and Raphael's Astronomical Ephemeris",
+    "data": [
+        {
+            "date": "1900-01-01",
+            "sun": {
+                "longitude": 280.55,
+                "nakshatra": 20,
+                "nakshatra_name": "Poorvashada"
+            },
+            "moon": {
+                "longitude": 124.32,
+                "nakshatra": 9,
+                "nakshatra_name": "Ashlesha"
+            },
+            "mercury": {
+                "longitude": 267.89,
+                "is_retrograde": false
+            },
+            "venus": {
+                "longitude": 301.45,
+                "is_retrograde": false
+            },
+            "mars": {
+                "longitude": 34.21,
+                "is_retrograde": false
+            },
+            "jupiter": {
+                "longitude": 187.65,
+                "is_retrograde": true
+            },
+            "saturn": {
+                "longitude": 339.78,
+                "is_retrograde": false
+            },
+            "rahu": {
+                "longitude": 56.32
+            }
+        },
+        {
+            "date": "1950-06-15",
+            "sun": {
+                "longitude": 84.23,
+                "nakshatra": 6,
+                "nakshatra_name": "Ardra"
+            },
+            "moon": {
+                "longitude": 213.45,
+                "nakshatra": 15,
+                "nakshatra_name": "Swati"
+            },
+            "mercury": {
+                "longitude": 78.91,
+                "is_retrograde": false
+            },
+            "venus": {
+                "longitude": 105.67,
+                "is_retrograde": false
+            },
+            "mars": {
+                "longitude": 124.32,
+                "is_retrograde": false
+            },
+            "jupiter": {
+                "longitude": 15.78,
+                "is_retrograde": false
+            },
+            "saturn": {
+                "longitude": 178.90,
+                "is_retrograde": true
+            },
+            "rahu": {
+                "longitude": 278.43
+            }
+        },
+        {
+            "date": "2000-12-21",
+            "sun": {
+                "longitude": 270.21,
+                "nakshatra": 19,
+                "nakshatra_name": "Moola"
+            },
+            "moon": {
+                "longitude": 45.67,
+                "nakshatra": 3,
+                "nakshatra_name": "Krittika"
+            },
+            "mercury": {
+                "longitude": 289.54,
+                "is_retrograde": true
+            },
+            "venus": {
+                "longitude": 245.32,
+                "is_retrograde": false
+            },
+            "mars": {
+                "longitude": 312.78,
+                "is_retrograde": false
+            },
+            "jupiter": {
+                "longitude": 67.89,
+                "is_retrograde": false
+            },
+            "saturn": {
+                "longitude": 34.56,
+                "is_retrograde": false
+            },
+            "rahu": {
+                "longitude": 189.76
+            }
+        }
+    ]
+}

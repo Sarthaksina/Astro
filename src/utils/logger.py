@@ -2,6 +2,8 @@
 # Cosmic Market Oracle - Logging Utility
 
 """
+[DEPRECATED] Use logging_config.py instead.
+
 Logging utility for the Cosmic Market Oracle.
 
 This module provides a standardized logging setup for all components of the Cosmic Market Oracle,
@@ -15,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+
+from .logging_config import setup_logging, get_logger
 
 def setup_logger(name: str, level: int = logging.INFO, 
                 log_dir: Optional[str] = None, 
@@ -31,42 +35,14 @@ def setup_logger(name: str, level: int = logging.INFO,
     Returns:
         Configured logger instance.
     """
-    # Create logger
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    
-    # Prevent adding handlers multiple times
-    if logger.handlers:
-        return logger
-    
-    # Create formatter
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    
-    # Add console handler if requested
-    if console:
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-    
-    # Add file handler if log directory is provided
+    # Use centralized logging configuration
     if log_dir:
-        # Ensure log directory exists
-        log_path = Path(log_dir)
-        log_path.mkdir(parents=True, exist_ok=True)
-        
-        # Create log file with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d")
-        log_file = log_path / f"{name}_{timestamp}.log"
-        
-        # Create file handler
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-    
-    return logger
+        return setup_logging(log_dir=log_dir, log_level=level)
+    else:
+        return get_logger(name)
+
+# Re-export get_logger from logging_config
+get_logger = get_logger
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -102,21 +78,20 @@ class LoggerContext:
         Initialize the context manager.
         
         Args:
-            logger: Logger to modify.
-            level: Temporary logging level to set.
+            logger: The logger to modify.
+            level: The temporary log level.
         """
         self.logger = logger
         self.level = level
-        self.previous_level = logger.level
+        self.original_level = logger.level
     
     def __enter__(self):
-        """Set the temporary log level."""
+        """Enter the context."""
         self.logger.setLevel(self.level)
-        return self.logger
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Restore the original log level."""
-        self.logger.setLevel(self.previous_level)
+        """Exit the context and restore the original log level."""
+        self.logger.setLevel(self.original_level)
 
 
 def suppress_logs(logger: logging.Logger, level: int = logging.WARNING):

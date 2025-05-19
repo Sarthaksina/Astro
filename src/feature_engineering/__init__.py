@@ -14,4 +14,11 @@ __all__ = [
     'market_features',
     'feature_selection',
     'feature_importance',
+    'enums',
+    'feature_definitions',
+    'pattern_detection',
+    'composite_indicators',
+    'genetic_feature_discovery',
+    'expert_validation',
+    'advanced_feature_engineering',
 ]

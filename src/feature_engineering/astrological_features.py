@@ -9,9 +9,11 @@ and other astrological phenomena relevant to financial markets.
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Optional, Union, Tuple
-from ..astro_engine.planetary_positions import (PlanetaryCalculator, SUN, MOON, MERCURY, VENUS, MARS, 
-                                             JUPITER, SATURN, URANUS, NEPTUNE, PLUTO, RAHU, KETU,
-                                             analyze_market_trend, analyze_financial_yogas, get_planet_name)
+from ..astro_engine.planetary_positions import PlanetaryCalculator
+from ..astro_engine.constants import (SUN, MOON, MERCURY, VENUS, MARS, 
+                                 JUPITER, SATURN, URANUS, NEPTUNE, PLUTO, RAHU, KETU,
+                                 get_planet_name)
+from ..astro_engine.vedic_dignities import analyze_market_trend, analyze_financial_yogas
 
 
 class AstrologicalFeatureGenerator:
@@ -27,12 +29,14 @@ class AstrologicalFeatureGenerator:
         self.calculator = calculator or PlanetaryCalculator()
         
         # Planet pairs for aspect and relationship calculations
+        # Using constants from astro_engine.constants
         self.major_planets = [SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN]
         self.outer_planets = [URANUS, NEPTUNE, PLUTO]
         self.nodes = [RAHU, KETU]
         self.all_planets = self.major_planets + self.outer_planets + self.nodes
         
         # Define aspect angles (in degrees) and their orbs (allowable deviation)
+        # These values are based on traditional Vedic astrology
         self.aspects = {
             'conjunction': {'angle': 0, 'orb': 8},
             'opposition': {'angle': 180, 'orb': 8},
@@ -367,31 +371,7 @@ class AstrologicalFeatureGenerator:
             
         return pd.DataFrame(feature_dicts, index=dates)
     
-    def _get_planet_name(self, planet_id: int) -> str:
-        """
-        Get the name of a planet from its ID.
-        
-        Args:
-            planet_id: Swiss Ephemeris planet ID
-            
-        Returns:
-            Planet name as string
-        """
-        planet_names = {
-            SUN: "sun",
-            MOON: "moon",
-            MERCURY: "mercury",
-            VENUS: "venus",
-            MARS: "mars",
-            JUPITER: "jupiter",
-            SATURN: "saturn",
-            URANUS: "uranus",
-            NEPTUNE: "neptune",
-            PLUTO: "pluto",
-            RAHU: "rahu",
-            KETU: "ketu"
-        }
-        return planet_names.get(planet_id, f"planet_{planet_id}")
+    # _get_planet_name method removed - now using centralized get_planet_name from constants.py
     
     def _calculate_element_distribution(self, planets_data: Dict) -> Dict[str, float]:
         """

@@ -24,34 +24,95 @@ class PositionalEncoding(nn.Module):
     
     Adds positional information to the input embeddings to provide
     sequence order information to the self-attention mechanism.
+    
+    Can incorporate astrological cycles for specialized encoding.
     """
     
-    def __init__(self, d_model: int, max_len: int = 5000):
+    def __init__(self, d_model: int, max_len: int = 5000, use_astro_cycles: bool = False, 
+                 planetary_cycles: Dict[str, float] = None):
         """
         Initialize the positional encoding.
         
         Args:
             d_model: Embedding dimension
             max_len: Maximum sequence length
+            use_astro_cycles: Whether to use astrological cycles for encoding
+            planetary_cycles: Dictionary mapping planet names to their cycle periods
         """
         super().__init__()
         
-        # Create positional encoding matrix
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
-        )
+        self.d_model = d_model
+        self.max_len = max_len
+        self.use_astro_cycles = use_astro_cycles
         
-        # Apply sine to even indices
-        pe[:, 0::2] = torch.sin(position * div_term)
+        # Default planetary cycles in days if not provided and using astro cycles
+        self.planetary_cycles = planetary_cycles or {
+            'Sun': 365.25,     # Solar year
+            'Moon': 29.53,      # Lunar month
+            'Mercury': 87.97,
+            'Venus': 224.7,
+            'Mars': 686.98,
+            'Jupiter': 4332.59,
+            'Saturn': 10759.22,
+            'Lunar_Node': 6798.38,  # Nodal cycle (18.6 years)
+        }
         
-        # Apply cosine to odd indices
-        pe[:, 1::2] = torch.cos(position * div_term)
+        # Create positional encoding
+        pe = self._create_encoding()
         
         # Add batch dimension and register as buffer
-        pe = pe.unsqueeze(0)
         self.register_buffer("pe", pe)
+    
+    def _create_encoding(self) -> torch.Tensor:
+        """
+        Create the positional encoding tensor.
+        
+        Returns:
+            Positional encoding tensor of shape (1, max_len, d_model)
+        """
+        if not self.use_astro_cycles:
+            # Standard sinusoidal encoding
+            pe = torch.zeros(self.max_len, self.d_model)
+            position = torch.arange(0, self.max_len, dtype=torch.float).unsqueeze(1)
+            div_term = torch.exp(
+                torch.arange(0, self.d_model, 2).float() * (-math.log(10000.0) / self.d_model)
+            )
+            
+            # Apply sine to even indices
+            pe[:, 0::2] = torch.sin(position * div_term)
+            
+            # Apply cosine to odd indices
+            pe[:, 1::2] = torch.cos(position * div_term)
+            
+            return pe.unsqueeze(0)
+        else:
+            # Astrological cycle-based encoding
+            pe = torch.zeros(self.max_len, self.d_model)
+            position = torch.arange(0, self.max_len, dtype=torch.float).unsqueeze(1)
+            
+            # Allocate dimensions to different planetary cycles
+            dim_per_planet = self.d_model // (2 * len(self.planetary_cycles))
+            remaining_dims = self.d_model - (2 * dim_per_planet * len(self.planetary_cycles))
+            
+            current_dim = 0
+            for i, (planet, cycle) in enumerate(self.planetary_cycles.items()):
+                # Calculate number of dimensions for this planet
+                if i == len(self.planetary_cycles) - 1:
+                    planet_dims = dim_per_planet * 2 + remaining_dims
+                else:
+                    planet_dims = dim_per_planet * 2
+                
+                # Create sine and cosine encodings based on planetary cycle
+                div_term = torch.exp(torch.arange(0, planet_dims, 2).float() * 
+                                    (-math.log(10000.0) / planet_dims))
+                pe[:, current_dim:current_dim+planet_dims:2] = torch.sin(
+                    position * div_term * (2 * math.pi / cycle))
+                pe[:, current_dim+1:current_dim+planet_dims:2] = torch.cos(
+                    position * div_term * (2 * math.pi / cycle))
+                
+                current_dim += planet_dims
+            
+            return pe.unsqueeze(0)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -72,6 +133,9 @@ class TransformerModel(nn.Module):
     
     Uses self-attention mechanisms to capture dependencies between
     different time steps and features in the input sequence.
+    
+    Can handle both standard time series data and specialized
+    astrological-economic data with separate feature streams.
     """
     
     def __init__(
@@ -85,6 +149,11 @@ class TransformerModel(nn.Module):
         dropout: float = 0.1,
         activation: str = "gelu",
         max_seq_length: int = 1000,
+        use_astro_encoding: bool = False,
+        separate_streams: bool = False,
+        market_features: int = 0,
+        astro_features: int = 0,
+        planetary_cycles: Dict[str, float] = None,
     ):
         """
         Initialize the Transformer model.
@@ -99,14 +168,32 @@ class TransformerModel(nn.Module):
             dropout: Dropout probability
             activation: Activation function
             max_seq_length: Maximum sequence length
+            use_astro_encoding: Whether to use astrological positional encoding
+            separate_streams: Whether to use separate streams for market and astro data
+            market_features: Number of market features (only used if separate_streams=True)
+            astro_features: Number of astrological features (only used if separate_streams=True)
+            planetary_cycles: Dictionary of planetary cycles for positional encoding
         """
         super().__init__()
         
-        # Input projection
-        self.input_projection = nn.Linear(input_dim, d_model)
+        self.separate_streams = separate_streams
+        
+        if separate_streams:
+            # Separate projections for market and astrological data
+            self.market_projection = nn.Linear(market_features, d_model // 2)
+            self.astro_projection = nn.Linear(astro_features, d_model // 2)
+            self.combined_projection = nn.Linear(d_model, d_model)
+        else:
+            # Single input projection
+            self.input_projection = nn.Linear(input_dim, d_model)
         
         # Positional encoding
-        self.pos_encoder = PositionalEncoding(d_model, max_seq_length)
+        self.pos_encoder = PositionalEncoding(
+            d_model, 
+            max_seq_length, 
+            use_astro_cycles=use_astro_encoding,
+            planetary_cycles=planetary_cycles
+        )
         
         # Transformer encoder
         encoder_layers = nn.TransformerEncoderLayer(
@@ -129,19 +216,38 @@ class TransformerModel(nn.Module):
             nn.Linear(d_model // 2, output_dim)
         )
     
-    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None, 
+                market_data: Optional[torch.Tensor] = None, 
+                astro_data: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Forward pass through the Transformer model.
         
         Args:
-            x: Input tensor of shape [batch_size, seq_len, input_dim]
+            x: Input tensor of shape [batch_size, seq_len, input_dim] (used if separate_streams=False)
             mask: Optional mask for padding
+            market_data: Market features tensor (used if separate_streams=True)
+            astro_data: Astrological features tensor (used if separate_streams=True)
             
         Returns:
             Output tensor of shape [batch_size, output_dim]
         """
-        # Project input to embedding dimension
-        x = self.input_projection(x)
+        if self.separate_streams:
+            # Process separate market and astrological data streams
+            if market_data is None or astro_data is None:
+                raise ValueError("Both market_data and astro_data must be provided when using separate streams")
+                
+            # Project each stream
+            market_features = self.market_projection(market_data)
+            astro_features = self.astro_projection(astro_data)
+            
+            # Concatenate along feature dimension
+            x = torch.cat([market_features, astro_features], dim=-1)
+            
+            # Apply combined projection
+            x = self.combined_projection(x)
+        else:
+            # Project input to embedding dimension
+            x = self.input_projection(x)
         
         # Add positional encoding
         x = self.pos_encoder(x)
@@ -149,7 +255,7 @@ class TransformerModel(nn.Module):
         # Apply transformer encoder
         x = self.transformer_encoder(x, src_key_padding_mask=mask)
         
-        # Use the last sequence element for prediction
+        # Use the output corresponding to the last time step
         x = x[:, -1, :]
         
         # Project to output dimension
@@ -733,10 +839,10 @@ class ODEFunc(nn.Module):
 
 class EnsembleModel(nn.Module):
     """
-    Ensemble model combining multiple architectures.
+    [DEPRECATED] This class is deprecated in favor of the more specialized ensemble 
+    implementations in src.models.ensemble module.
     
-    Aggregates predictions from different model types for improved
-    accuracy and robustness.
+    This is a forwarding class that redirects to the EnsembleModel implementation in ensemble.py.
     """
     
     def __init__(
@@ -759,50 +865,17 @@ class EnsembleModel(nn.Module):
         """
         super().__init__()
         
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.aggregation = aggregation
+        # Import here to avoid circular imports
+        from src.models.ensemble import EnsembleModel as NewEnsembleModel
         
-        # Create models
-        self.models = nn.ModuleDict()
-        
-        for model_name, config in model_configs.items():
-            if model_name == "transformer":
-                self.models[model_name] = TransformerModel(
-                    input_dim=input_dim,
-                    output_dim=output_dim,
-                    **config
-                )
-            elif model_name == "gnn":
-                self.models[model_name] = GNNModel(
-                    input_dim=input_dim,
-                    output_dim=output_dim,
-                    **config
-                )
-            elif model_name == "hybrid":
-                self.models[model_name] = HybridCNNTransformerModel(
-                    input_dim=input_dim,
-                    output_dim=output_dim,
-                    **config
-                )
-            elif model_name == "neural_ode":
-                self.models[model_name] = NeuralODEModel(
-                    input_dim=input_dim,
-                    output_dim=output_dim,
-                    **config
-                )
-        
-        # Set weights for weighted aggregation
-        if weights is None:
-            self.weights = torch.ones(len(self.models)) / len(self.models)
-        else:
-            self.weights = torch.tensor(weights)
-        
-        # Stacking layer for stacking aggregation
-        if aggregation == "stacking":
-            self.stacking_layer = nn.Linear(
-                len(self.models) * output_dim, output_dim
-            )
+        # Create an instance of the new implementation
+        self.model = NewEnsembleModel(
+            input_dim=input_dim,
+            output_dim=output_dim,
+            model_configs=model_configs,
+            aggregation=aggregation,
+            weights=weights
+        )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -814,24 +887,4 @@ class EnsembleModel(nn.Module):
         Returns:
             Output tensor of shape [batch_size, output_dim]
         """
-        # Get predictions from all models
-        predictions = []
-        for model_name, model in self.models.items():
-            predictions.append(model(x))
-        
-        # Aggregate predictions
-        if self.aggregation == "mean":
-            output = torch.mean(torch.stack(predictions), dim=0)
-        elif self.aggregation == "weighted":
-            weights = self.weights.to(x.device)
-            output = torch.sum(
-                torch.stack(predictions) * weights.view(-1, 1, 1), dim=0
-            )
-        elif self.aggregation == "stacking":
-            # Concatenate predictions
-            concat_predictions = torch.cat(predictions, dim=1)
-            
-            # Apply stacking layer
-            output = self.stacking_layer(concat_predictions)
-        
-        return output
+        return self.model(x)

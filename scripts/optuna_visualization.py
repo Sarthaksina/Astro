@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 import random
 import math
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 
 # Create output directory
 results_dir = Path("results/optuna")

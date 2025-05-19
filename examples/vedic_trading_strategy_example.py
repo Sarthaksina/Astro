@@ -32,6 +32,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import logging
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 
 # Ensure Python 3.10 compatibility
 if sys.version_info.major != 3 or sys.version_info.minor != 10:

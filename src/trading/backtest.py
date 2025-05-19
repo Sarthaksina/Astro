@@ -348,6 +348,54 @@ class BacktestEngine:
             "metrics_comparison": metrics_comparison
         }
     
+    def visualize_results(self, output_dir: str = "reports"):
+        """
+        Visualize backtest results using the continuous learning framework.
+        
+        Args:
+            output_dir: Directory to save the visualizations
+        """
+        from src.trading.continuous_learning import PerformanceMonitor, ABTestingFramework
+        
+        # Create a temporary PerformanceMonitor to use its visualization
+        monitor = PerformanceMonitor(
+            strategy=None,
+            backtest_engine=self,
+            retrain_callback=lambda: None,
+            market_data=None,
+            planetary_data=None,
+            window_size=30
+        )
+        
+        # Add results to performance history
+        for strategy_name, result in self.results.items():
+            monitor.performance_history.append({
+                'date': result["results"].index[-1],
+                'returns': result["results"]["returns"],
+                'equity': result["results"]["equity"],
+                'strategy_name': strategy_name
+            })
+        
+        # Use PerformanceMonitor's visualization
+        monitor.plot_performance_history(metric="returns", save_path=os.path.join(output_dir, "returns.png"))
+        monitor.plot_performance_history(metric="equity", save_path=os.path.join(output_dir, "equity.png"))
+        
+        # Create performance report
+        report_path = os.path.join(output_dir, "performance_report.txt")
+        with open(report_path, "w") as f:
+            f.write("=== Performance Report ===\n")
+            for strategy_name, result in self.results.items():
+                f.write(f"Strategy: {strategy_name}\n")
+                f.write(f"Start Date: {result['results'].index[0]}\n")
+                f.write(f"End Date: {result['results'].index[-1]}\n")
+                f.write(f"Total Return: {result['results']['returns'].sum():.2%}\n")
+                f.write(f"Annualized Return: {result['results']['returns'].mean() * 252:.2%}\n")
+                f.write(f"Sharpe Ratio: {result['results']['returns'].mean() / result['results']['returns'].std() * np.sqrt(252):.2f}\n")
+                f.write(f"Max Drawdown: {result['results']['equity'].min() / result['results']['equity'].iloc[0] - 1:.2%}\n")
+                f.write(f"Number of Trades: {result['results']['trade'].sum()}\n")
+                f.write(f"Win Rate: {result['results'][result['results']['trade'] == True]['returns'].gt(0).mean():.2%}\n")
+                f.write("\n")
+    
     def generate_report(self, output_dir: str = "reports") -> str:
         """
         Generate a backtest report.

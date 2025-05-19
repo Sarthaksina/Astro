@@ -81,15 +81,3 @@ class MarketLogger(logging.Logger):
 
 # Register the custom logger class
 logging.setLoggerClass(MarketLogger)
-
-def get_logger(name: str = "cosmic_market_oracle") -> MarketLogger:
-    """
-    Get a logger instance with the specified name.
-    
-    Args:
-        name: Logger name (default: cosmic_market_oracle)
-        
-    Returns:
-        Logger instance
-    """
-    return logging.getLogger(name)

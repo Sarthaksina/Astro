@@ -15,6 +15,9 @@ Implemented models include:
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Optional, Tuple, Union, Any, Callable
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 # Import required libraries
 import xgboost as xgb
@@ -23,6 +26,141 @@ import catboost as cb
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.ensemble import StackingRegressor
 from sklearn.model_selection import KFold
+
+from src.models.advanced_architectures import TransformerModel, GNNModel, HybridCNNTransformerModel, NeuralODEModel
+
+
+class EnsembleModel(nn.Module):
+    """
+    Ensemble model combining multiple neural network architectures.
+    
+    This model combines predictions from multiple model architectures
+    using a weighted average or learned aggregation.
+    
+    Args:
+        input_dim (int): Input dimension
+        output_dim (int): Output dimension
+        model_configs (Dict): Configuration for each model type
+        aggregation (str): Aggregation method ('weighted' or 'learned')
+        weights (List[float]): Optional weights for weighted aggregation
+    """
+    def __init__(self, input_dim: int, output_dim: int, model_configs: Dict[str, Dict],
+                 aggregation: str = 'weighted', weights: Optional[List[float]] = None):
+        super(EnsembleModel, self).__init__()
+        
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.aggregation = aggregation
+        
+        # Create models
+        self.models = nn.ModuleDict()
+        for model_name, config in model_configs.items():
+            if model_name == 'transformer':
+                self.models[model_name] = TransformerModel(
+                    input_dim=input_dim,
+                    d_model=config.get('d_model', 256),
+                    nhead=config.get('nhead', 8),
+                    num_layers=config.get('num_layers', 6),
+                    dim_feedforward=config.get('dim_feedforward', 1024),
+                    output_dim=output_dim,
+                    dropout=config.get('dropout', 0.1)
+                )
+            elif model_name == 'gnn':
+                self.models[model_name] = GNNModel(
+                    input_dim=input_dim,
+                    hidden_dim=config.get('hidden_dim', 256),
+                    output_dim=output_dim,
+                    num_layers=config.get('num_layers', 3),
+                    dropout=config.get('dropout', 0.1)
+                )
+            elif model_name == 'hybrid':
+                self.models[model_name] = HybridCNNTransformerModel(
+                    input_dim=input_dim,
+                    cnn_channels=config.get('cnn_channels', [64, 128, 256]),
+                    d_model=config.get('d_model', 256),
+                    nhead=config.get('nhead', 8),
+                    num_layers=config.get('num_layers', 4),
+                    output_dim=output_dim,
+                    dropout=config.get('dropout', 0.1)
+                )
+            elif model_name == 'neural_ode':
+                self.models[model_name] = NeuralODEModel(
+                    input_dim=input_dim,
+                    hidden_dim=config.get('hidden_dim', 128),
+                    output_dim=output_dim,
+                    augment_dim=config.get('augment_dim', 5),
+                    time_steps=config.get('time_steps', 10)
+                )
+        
+        # Set up aggregation
+        if aggregation == 'weighted':
+            if weights is None:
+                # Equal weights
+                self.weights = nn.Parameter(torch.ones(len(self.models)) / len(self.models), requires_grad=False)
+            else:
+                # Normalize weights
+                weights_tensor = torch.tensor(weights, dtype=torch.float32)
+                self.weights = nn.Parameter(weights_tensor / weights_tensor.sum(), requires_grad=False)
+        else:  # learned
+            # Learnable weights
+            self.weights = nn.Parameter(torch.ones(len(self.models)) / len(self.models))
+            
+            # Attention-based aggregation
+            self.attention = nn.Sequential(
+                nn.Linear(output_dim * len(self.models), 128),
+                nn.ReLU(),
+                nn.Linear(128, len(self.models)),
+                nn.Softmax(dim=1)
+            )
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass through the ensemble model.
+        
+        Args:
+            x: Input tensor of shape (batch_size, seq_len, input_dim)
+            
+        Returns:
+            Output tensor of shape (batch_size, output_dim)
+        """
+        # Get predictions from each model
+        outputs = []
+        for model in self.models.values():
+            outputs.append(model(x))
+        
+        # Aggregate predictions
+        if self.aggregation == 'weighted':
+            # Simple weighted average
+            ensemble_output = torch.zeros_like(outputs[0])
+            for i, output in enumerate(outputs):
+                ensemble_output += output * self.weights[i]
+        else:  # learned
+            # Concatenate outputs
+            concat_outputs = torch.cat(outputs, dim=1)
+            
+            # Calculate attention weights
+            attention_weights = self.attention(concat_outputs)
+            
+            # Weighted sum
+            ensemble_output = torch.zeros_like(outputs[0])
+            for i, output in enumerate(outputs):
+                ensemble_output += output * attention_weights[:, i].unsqueeze(1)
+        
+        return ensemble_output
+    
+    def get_model_weights(self) -> Dict[str, float]:
+        """
+        Get the weights for each model in the ensemble.
+        
+        Returns:
+            Dictionary mapping model names to weights
+        """
+        if self.aggregation == 'weighted':
+            return {name: self.weights[i].item() for i, name in enumerate(self.models.keys())}
+        else:
+            # For learned aggregation, we can't directly return weights
+            # as they depend on the input
+            return {name: float('nan') for name in self.models.keys()}
 
 
 class CyclicalXGBoostModel(BaseEstimator, RegressorMixin):

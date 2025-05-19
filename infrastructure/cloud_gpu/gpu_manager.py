@@ -17,6 +17,8 @@ import subprocess
 import requests
 from datetime import datetime, timedelta
 import yaml
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 
 # Import provider-specific managers
 from .vast_ai_manager import VastAIManager

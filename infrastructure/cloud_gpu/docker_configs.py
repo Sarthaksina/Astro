@@ -7,6 +7,8 @@ for different GPU workloads, optimized for various machine learning tasks.
 import os
 import yaml
 import logging
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape

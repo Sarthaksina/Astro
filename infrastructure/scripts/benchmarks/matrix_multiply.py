@@ -11,6 +11,8 @@ import json
 import time
 import numpy as np
 import torch
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 
 # Configure benchmark parameters
 MATRIX_SIZES = [1024, 2048, 4096, 8192]  # Matrix dimensions to test

@@ -226,7 +226,14 @@ class BaseStrategy(ABC):
 
 
 class VedicAstrologyStrategy(BaseStrategy):
-    """Trading strategy based on Vedic astrological signals."""
+    """
+    [PARTIALLY DEPRECATED] This implementation is partially deprecated.
+    
+    For new code, please use the specialized signal generators from signal_generator.py
+    combined with the BaseStrategy class for more modular and maintainable code.
+    
+    Trading strategy based on Vedic astrological signals.
+    """
     
     def __init__(self, name: str = "Vedic Astrology Strategy", 
                 description: str = "Trading strategy based on Vedic astrological signals"):
@@ -407,6 +414,9 @@ class VedicAstrologyStrategy(BaseStrategy):
     def backtest(self, market_data: pd.DataFrame, planetary_data: pd.DataFrame, 
                 initial_capital: float = 100000.0) -> pd.DataFrame:
         """
+        [DEPRECATED] This method is deprecated. Please use the BacktestEngine class from 
+        src.trading.backtest instead for more comprehensive backtesting capabilities.
+        
         Backtest the strategy on historical data.
         
         Args:

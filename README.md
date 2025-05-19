@@ -13,6 +13,7 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 - **Multi-Modal Deep Learning**: Integrates time series, cyclical, and symbolic data
 - **Cloud GPU Infrastructure**: Optimized training on VAST.ai and ThunderCompute platforms
 - **Interpretable Predictions**: Explains market forecasts through astrological reasoning
+- **Modular Hierarchical RL**: Flexible framework for strategic planning and tactical execution
 
 ## Getting Started
 
@@ -112,6 +113,43 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 6. **Prediction Pipeline**: End-to-end system for generating market predictions
 7. **API Server**: FastAPI-based interface for accessing predictions and data
 8. **Cloud GPU Management**: Automated infrastructure for cost-efficient model training
+9. **Modular Hierarchical RL Framework**: Flexible architecture for strategic planning and tactical execution in trading
+
+## Modular Hierarchical RL Framework
+
+The project now features a unified modular hierarchical reinforcement learning framework that replaces several redundant implementations. This new architecture provides a clear separation between strategic planning and tactical execution components.
+
+### Key Benefits
+
+- **Modularity**: Easily swap different strategic planners or tactical executors
+- **Maintainability**: Clear interfaces and separation of concerns
+- **Extensibility**: Simple to add new algorithms or strategies
+- **Performance**: Optimized implementations of MCTS and PPO algorithms
+
+### Usage Example
+
+```python
+from src.trading.modular_hierarchical_rl import (
+    ModularHierarchicalRLAgent,
+    MCTSStrategicPlanner,
+    PPOTacticalExecutor
+)
+
+# Create components
+strategic_planner = MCTSStrategicPlanner(state_dim=state_dim, num_simulations=50)
+tactical_executor = PPOTacticalExecutor(state_dim=state_dim, action_dim=action_dim)
+
+# Create the agent
+agent = ModularHierarchicalRLAgent(
+    strategic_planner=strategic_planner,
+    tactical_executor=tactical_executor
+)
+
+# Use the agent
+action = agent.select_action(state)
+```
+
+For a complete demonstration, see `scripts/modular_hierarchical_rl_demo.py`.
 
 ## Development Workflow
 

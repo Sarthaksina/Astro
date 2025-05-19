@@ -2,7 +2,7 @@
 
 import pytest
 import datetime
-from src.astro_engine.planetary_positions import PlanetaryCalculator, get_planetary_aspects
+from src.astro_engine.planetary_positions import PlanetaryCalculator, get_planetary_aspects, is_aspect_applying
 
 
 def test_planetary_calculator_initialization():
@@ -95,3 +95,36 @@ def test_planetary_aspects():
         assert "aspect_type" in aspect
         assert "orb" in aspect
         assert "applying" in aspect
+
+
+def test_is_aspect_applying():
+    """Test the is_aspect_applying function"""
+    # Test case 1: Applying conjunction (planets moving toward each other)
+    # Planet 1 at 10° moving forward at 1°/day
+    # Planet 2 at 15° moving backward at -0.5°/day
+    # They are getting closer, so aspect should be applying
+    assert is_aspect_applying(10.0, 15.0, 1.0, -0.5, 0) is True
+    
+    # Test case 2: Separating conjunction (planets moving away from each other)
+    # Planet 1 at 10° moving backward at -1°/day
+    # Planet 2 at 15° moving forward at 0.5°/day
+    # They are moving apart, so aspect should be separating
+    assert is_aspect_applying(10.0, 15.0, -1.0, 0.5, 0) is False
+    
+    # Test case 3: Applying opposition (planets moving toward 180° difference)
+    # Planet 1 at 10° moving forward at 1°/day
+    # Planet 2 at 170° moving backward at -0.5°/day
+    # They are moving toward opposition, so aspect should be applying
+    assert is_aspect_applying(10.0, 170.0, 1.0, -0.5, 180) is True
+    
+    # Test case 4: Separating trine (planets moving away from 120° difference)
+    # Planet 1 at 10° moving forward at 1°/day
+    # Planet 2 at 130° moving forward at 1.5°/day
+    # Second planet is moving faster, so they're separating from trine
+    assert is_aspect_applying(10.0, 130.0, 1.0, 1.5, 120) is False
+    
+    # Test case 5: Edge case with planets at exact aspect
+    # Planet 1 at 90° moving forward at 1°/day
+    # Planet 2 at 0° moving forward at 0.5°/day
+    # First planet is moving faster away from square, so aspect should be separating
+    assert is_aspect_applying(90.0, 0.0, 1.0, 0.5, 90) is False

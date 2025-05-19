@@ -14,6 +14,8 @@ import os
 import sys
 import subprocess
 import platform
+from src.trading.unified_mcts import MCTS, MCTSPredictor
+from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
 
 def check_python_version():
