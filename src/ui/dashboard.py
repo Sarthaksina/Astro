@@ -201,16 +201,13 @@ class CosmicMarketDashboard:
                     use_column_width=True)
             
             # Navigation menu
-            from streamlit_option_menu import option_menu
-            
-            selected = option_menu(
-                menu_title="Navigation",
-                options=["Dashboard", "Predictions", "Analysis", "Chat", "Alerts", "Settings", "Feedback"],
-                icons=["house", "graph-up", "bar-chart", "chat", "bell", "gear", "star"],
-                menu_icon="cast",
-                default_index=0,
+
+        # In show_sidebar method:
+            selected = st.selectbox(
+            "Navigation",
+            ["Dashboard", "Predictions", "Analysis", "Chat", "Alerts", "Settings", "Feedback"],
+            index=0
             )
-            
             st.session_state.current_page = selected
             
             # Real-time alerts
@@ -1000,4 +997,4 @@ class CosmicMarketDashboard:
             return "For the current astrological climate, I recommend a balanced approach: 60% equities focused on stable sectors (utilities, consumer staples), 30% in growth sectors that benefit from current planetary transits, and 10% cash for opportunities. The Vedic Nakshatra analysis suggests favorable timing for entries on Monday and Thursday."
         
         else:
-            return "I understand you're asking about market conditions. Based on current planetary positions and market data, I can provide insights on timing, risk assessment, and strategic recommendations. Could you be more specific about what aspect you'd like me to analyze"
+            return "I understand you're asking about market conditions. Based on current planetary positions and market data, I can provide insights on timing, risk assessment, and strategic recommendations. Could you be more specific about what aspect you'd like me to analyze?"
