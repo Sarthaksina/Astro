@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.models import Variable
-
+from src.astro_engine.planetary_positions import PlanetaryCalculator  # Import from src.astro_engine.planetary_positions
 # Import project modules
 import sys
 import os
@@ -48,22 +48,21 @@ def fetch_market_data(**kwargs):
     
     # Return data for next task
     return data
-
 def calculate_planetary_positions(**kwargs):
     """
     Calculate planetary positions for the given date range.
+    Uses the consolidated implementation from data_integration.airflow_dags.
     """
-    from src.astro_engine.planetary_calculator import calculate_positions
+    # Import the consolidated function to avoid code duplication
+    from src.data_integration.airflow_dags import calculate_planetary_positions as calc_positions
     
     # Get parameters
     start_date = kwargs.get('start_date', '1800-01-01')
     end_date = kwargs.get('end_date', datetime.now().strftime('%Y-%m-%d'))
     
-    # Calculate positions
-    positions = calculate_positions(start_date=start_date, end_date=end_date)
-    
-    # Return positions for next task
-    return positions
+    # Call the consolidated function
+    return calc_positions(start_date=start_date, end_date=end_date, **kwargs)
+
 
 def integrate_data(**kwargs):
     """

@@ -32,12 +32,8 @@ from src.statistical_modeling.statistical_testing import (
 )
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+from src.utils.logging_config import setup_logging
+logger = setup_logging(__name__)
 
 class CyclicalCorrelationAnalyzer:
     """

@@ -9,8 +9,8 @@ aspect angles, orbs, and strength factors that are particularly relevant to mark
 from typing import Dict, List, Optional, Union, Tuple
 import math
 from datetime import datetime
-from .constants import PlanetaryCalculator, SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU, get_planet_name
-
+from .constants import  SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU, get_planet_name
+from .planetary_positions import PlanetaryCalculator
 # Define standard aspects and their orbs
 CONJUNCTION = 0
 OPPOSITION = 180

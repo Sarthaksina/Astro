@@ -20,23 +20,18 @@ from sqlalchemy import func, and_, or_, not_
 from sqlalchemy.sql import text
 
 from src.data_integration.timescale_schema import (
-    DatabaseManager, PlanetaryPosition, FinancialData, MarketRegime,
+    PlanetaryPosition, FinancialData, MarketRegime,
     AstrologicalEvent, TechnicalIndicator, Prediction, DataSyncLog
 )
+from src.utils.db.timescale_connector import TimescaleConnector
+from src.utils.logging_config import setup_logging
+from config.db_config import get_db_params
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = setup_logging(__name__)
 
-# Database connection parameters
-DB_PARAMS = {
-    'host': 'localhost',
-    'port': 5432,
-    'user': 'postgres',
-    'password': 'postgres',
-    'database': 'cosmic_oracle',
-    'schema': 'cosmic_data'
-}
+# Get database parameters
+DB_PARAMS = get_db_params()
 
 # Email configuration
 EMAIL_CONFIG = {
@@ -467,9 +462,9 @@ class DataQualityMonitor:
         self.checks = []
         self.results = []
         
-        # Create database manager
-        self.db_manager = DatabaseManager(**self.db_params)
-        self.db_manager.connect()
+       # Create TimescaleDB connector
+        self.db_connector = TimescaleConnector(**self.db_params)
+        self.db_connector.connect()
         
     def add_check(self, check: DataQualityCheck) -> None:
         """
@@ -490,7 +485,7 @@ class DataQualityMonitor:
         self.results = []
         
         # Create session
-        session = self.db_manager.Session()
+        session = self.db_connector.get_session()
         
         try:
             for check in self.checks:

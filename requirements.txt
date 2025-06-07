@@ -101,3 +101,15 @@ opentelemetry-exporter-otlp==1.15.0
 # Utilities
 # =====================================================================
 python-dotenv==1.0.0  # Environment variable management
+
+# =====================================================================
+# Web Dashboard & UI
+# =====================================================================
+streamlit>=1.28.0  # Interactive web dashboard
+streamlit-authenticator>=0.2.3  # User authentication
+streamlit-option-menu>=0.3.6  # Navigation menu
+streamlit-aggrid>=0.3.4  # Interactive data grids
+streamlit-chat>=0.1.1  # Chat interface
+plotly>=5.17.0  # Interactive plots
+websockets>=11.0.3  # Real-time notifications
+redis>=4.5.0  # Session storage and caching

@@ -24,41 +24,36 @@ from sqlalchemy.orm import Session
 
 # Project imports
 from src.data_integration.timescale_schema import (
-    DatabaseManager, PlanetaryPosition, FinancialData, MarketRegime,
+    PlanetaryPosition, FinancialData, MarketRegime,
     AstrologicalEvent, TechnicalIndicator, Prediction, DataSyncLog
 )
+from src.utils.db.timescale_connector import TimescaleConnector
+from src.utils.logging_config import setup_logging
+from config.db_config import get_db_params
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = setup_logging(__name__)
 
-# Database connection parameters
-DB_PARAMS = {
-    'host': 'localhost',
-    'port': 5432,
-    'user': 'postgres',
-    'password': 'postgres',
-    'database': 'cosmic_oracle',
-    'schema': 'cosmic_data'
-}
+# Get database parameters
+DB_PARAMS = get_db_params()
 
-# Create database manager
-db_manager = DatabaseManager(**DB_PARAMS)
-db_manager.connect()
+# Create TimescaleDB connector
+db_connector = TimescaleConnector(**DB_PARAMS)
+db_connector.connect()
 
 # Create session factory
-Session = db_manager.Session
+def get_session():
+    return db_connector.get_session()
 
 
 # Define context dependency
 async def get_context():
     """Create GraphQL context with database session."""
-    session = Session()
+    session = get_session()
     try:
         yield {"session": session}
     finally:
         session.close()
-
 
 # Define GraphQL types
 @strawberry.type

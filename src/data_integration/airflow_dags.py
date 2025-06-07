@@ -19,17 +19,19 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.dates import days_ago
 
 # Project imports
-from src.data_acquisition.financial_data import YahooFinanceConnector, BloombergConnector
+from src.data_acquisition.financial_data import YahooFinanceDataSource, BloombergDataSource
 from src.astro_engine.planetary_positions import PlanetaryCalculator
 from src.astro_engine.vedic_analysis import VedicAnalyzer
-# Keeping for backward compatibility, but marked as deprecated
-from src.astro_engine.vedic_market_analyzer import VedicMarketAnalyzer  # [DEPRECATED]
 from src.data_processing.market_regime import MarketRegimeLabeler
-from src.data_integration.timescale_schema import DatabaseManager
+from src.utils.db.timescale_connector import TimescaleConnector
+from src.utils.logging_config import setup_logging
+from config.db_config import get_db_params
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = setup_logging(__name__)
+
+# Get database parameters
+DB_PARAMS = get_db_params()
 
 # Define default arguments for DAGs
 default_args = {
@@ -65,17 +67,21 @@ def fetch_financial_data(symbol: str, start_date: str, end_date: str, **kwargs) 
     logger.info(f"Fetching financial data for {symbol} from {start_date} to {end_date}")
     
     # Create Yahoo Finance connector
-    connector = YahooFinanceConnector()
+    yahoo_source = YahooFinanceDataSource()
     
     # Fetch data
-    data = connector.get_historical_data(symbol, start_date, end_date)
+    data = yahoo_source.fetch_data(
+        symbol=symbol,
+        start_date=start_date,
+        end_date=end_date
+    )
     
     # Connect to database
-    db_manager = DatabaseManager(**DB_PARAMS)
-    db_manager.connect()
+    db_connector = TimescaleConnector(**DB_PARAMS)
+    db_connector.connect()
     
     # Create session
-    session = db_manager.Session()
+    session = db_connector.get_session()
     
     try:
         # Insert data into database
@@ -175,11 +181,11 @@ def calculate_planetary_positions(start_date: str, end_date: str, interval_days:
         current_date += timedelta(days=interval_days)
     
     # Connect to database
-    db_manager = DatabaseManager(**DB_PARAMS)
-    db_manager.connect()
+    db_connector = TimescaleConnector(**DB_PARAMS)
+    db_connector.connect()
     
     # Create session
-    session = db_manager.Session()
+    session = db_connector.get_session()
     
     try:
         # Insert data into database

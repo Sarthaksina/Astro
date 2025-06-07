@@ -246,3 +246,18 @@ def analyze_comprehensive_market_forecast(
         "yogas": yogas,
         "description": description
     }
+def get_vedic_market_analysis(date, calculator=None):
+    """
+    Get comprehensive Vedic market analysis using the new VedicAnalyzer.
+    This is the recommended function for new code.
+    """
+    from .vedic_analysis import VedicAnalyzer
+    analyzer = VedicAnalyzer()
+    return analyzer.analyze_date(date)
+
+# For backward compatibility
+__all__ = [
+    'analyze_market_trend', 
+    'analyze_comprehensive_market_forecast',
+    'get_vedic_market_analysis'
+]

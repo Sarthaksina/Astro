@@ -1,0 +1,113 @@
+[global]
+# Global configuration options
+
+# Development mode
+developmentMode = true
+
+# Show error details
+showErrorDetails = true
+
+# Data frame serialization
+dataFrameSerialization = "legacy"
+
+[server]
+# Server configuration
+
+# Port for the Streamlit server
+port = 8501
+
+# Enable CORS
+enableCORS = false
+
+# Enable XSS protection
+enableXsrfProtection = true
+
+# Max upload size (MB)
+maxUploadSize = 200
+
+# Max message size (MB)
+maxMessageSize = 200
+
+# Enable WebSocket compression
+enableWebsocketCompression = true
+
+# Server address
+address = "0.0.0.0"
+
+# Base URL path
+baseUrlPath = ""
+
+# Cookie secret (change in production)
+cookieSecret = "cosmic-market-oracle-secret-key-change-in-production"
+
+[browser]
+# Browser configuration
+
+# Gather usage stats
+gatherUsageStats = false
+
+# Server address for browser
+serverAddress = "localhost"
+
+# Server port for browser  
+serverPort = 8501
+
+[theme]
+# Theme configuration
+
+# Primary color
+primaryColor = "#1e3c72"
+
+# Background color
+backgroundColor = "#ffffff"
+
+# Secondary background color
+secondaryBackgroundColor = "#f0f2f6"
+
+# Text color
+textColor = "#262730"
+
+# Font family
+font = "sans serif"
+
+[client]
+# Client configuration
+
+# Show error details
+showErrorDetails = true
+
+# Toolbar mode
+toolbarMode = "auto"
+
+[runner]
+# Runner configuration
+
+# Magic enabled
+magicEnabled = true
+
+# Install Tracer enabled
+installTracer = false
+
+# Fix matplotlib
+fixMatplotlib = true
+
+# Post script GC
+postScriptGC = true
+
+# Fast reruns
+fastReruns = true
+
+[logger]
+# Logging configuration
+
+# Log level
+level = "info"
+
+# Message format
+messageFormat = "%(asctime)s %(message)s"
+
+[deprecation]
+# Deprecation warnings
+
+# Show Pyplot Global Use
+showPyplotGlobalUse = false

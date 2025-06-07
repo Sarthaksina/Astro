@@ -14,8 +14,7 @@ from .dasha_systems import DashaCalculator
 from .vedic_dignities import calculate_dignity_state, calculate_all_dignities
 from .astrological_aspects import AspectCalculator, analyze_aspects_for_date
 from .vedic_analysis import VedicAnalyzer
-# Keeping for backward compatibility, but marked as deprecated
-from .vedic_market_analyzer import VedicMarketAnalyzer  # [DEPRECATED]
+
 
 __all__ = [
     'planetary_positions',
@@ -31,7 +30,6 @@ __all__ = [
     'FinancialYogaAnalyzer',
     'DashaCalculator',
     'AspectCalculator',
-    'VedicMarketAnalyzer',  # [DEPRECATED] Use VedicAnalyzer instead
     'VedicAnalyzer',  # New consolidated class
     'analyze_aspects_for_date',
     'calculate_dignity_state',

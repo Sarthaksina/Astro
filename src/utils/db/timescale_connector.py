@@ -21,11 +21,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger("timescale_connector")
+from src.utils.logging_config import setup_logging
+logger = setup_logging(__name__)
 
 
 class TimescaleConnector:

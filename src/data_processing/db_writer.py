@@ -13,13 +13,16 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from config.database import get_db, engine
+# Updated imports to use consolidated database configuration
+from config.database import get_db, get_engine, Base
 from .models import MarketData, PlanetaryData, PlanetaryAspect, MarketPrediction
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+from src.utils.logging_config import setup_logging
+logger = setup_logging(__name__)
 
+# Get engine for session creation
+engine = get_engine()
 
 def write_market_data_to_db(data: pd.DataFrame, batch_size: int = 1000) -> bool:
     """
