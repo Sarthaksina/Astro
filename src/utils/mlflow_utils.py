@@ -11,7 +11,7 @@ from mlflow.tracking import MlflowClient
 from mlflow.exceptions import MlflowException
 from mlflow.models.signature import ModelSignature
 from mlflow.types import Schema, ColSpec
-from src.utils.logging_config import get_logger
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

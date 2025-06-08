@@ -31,26 +31,12 @@ The 16 divisional charts are:
 from typing import Dict, List, Optional, Union, Tuple
 import math
 
-from .planetary_positions import PlanetaryCalculator, SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU
-
-# Define the signs and their lords
-SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
-         "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
-
-SIGN_LORDS = {
-    0: MARS,      # Aries
-    1: VENUS,     # Taurus
-    2: MERCURY,   # Gemini
-    3: MOON,      # Cancer
-    4: SUN,       # Leo
-    5: MERCURY,   # Virgo
-    6: VENUS,     # Libra
-    7: MARS,      # Scorpio
-    8: JUPITER,   # Sagittarius
-    9: SATURN,    # Capricorn
-    10: SATURN,   # Aquarius
-    11: JUPITER   # Pisces
-}
+from .planetary_positions import PlanetaryCalculator
+from .constants import (
+    SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU, # Planet IDs
+    ZODIAC_SIGN_NAMES, # Sign names list
+    get_sign_ruler # Function to get sign ruler
+)
 
 # Financial significance of each divisional chart
 VARGA_FINANCIAL_SIGNIFICANCE = {
@@ -287,7 +273,7 @@ class DivisionalCharts:
             Planet ID of the sign lord
         """
         sign = int(varga_longitude / 30)
-        return SIGN_LORDS[sign]
+        return get_sign_ruler(sign)
     
     def calculate_vargottama(self, rashi_longitude: float, navamsa_longitude: float) -> bool:
         """
@@ -332,7 +318,7 @@ class DivisionalCharts:
             result[varga] = {
                 "longitude": varga_longitude,
                 "sign": varga_sign,
-                "sign_name": SIGNS[varga_sign],
+                "sign_name": ZODIAC_SIGN_NAMES[varga_sign],
                 "degree_in_sign": varga_degree,
                 "lord": varga_lord,
                 "financial_significance": VARGA_FINANCIAL_SIGNIFICANCE.get(varga, "")

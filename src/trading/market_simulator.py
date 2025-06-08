@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Union, Tuple, Any
 from datetime import datetime
 import logging
 
-from src.utils.logging_config import get_logger
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -2,7 +2,6 @@
 Unified Database Manager for the Cosmic Market Oracle.
 
 This module provides a consolidated interface for database operations,
-combining the functionality from both timescale_schema.py and timescale_integration.py
 into a single, consistent API.
 """
 

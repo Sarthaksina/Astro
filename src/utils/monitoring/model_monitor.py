@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from datetime import datetime
 
-from src.utils.logging_config import get_logger
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -37,12 +37,22 @@ class ModelMonitor:
         self.version = version
         self.start_time = datetime.now()
         
+from src.utils.config import Config # Added import
+
         # Load configuration
-        self.config_path = Path(config_path) if config_path else Path("config/monitoring.json")
-        self.config = self._load_config()
-        
+        if config_path:
+            self.config = Config(config_path)
+        else:
+            default_monitoring_config_path = Path("config/monitoring.json")
+            if default_monitoring_config_path.exists():
+                self.config = Config(default_monitoring_config_path)
+            else:
+                logger.warning(f"Monitoring config file {default_monitoring_config_path} not found. Using internal defaults for ModelMonitor.")
+                self.config = Config(None) # Pass None to avoid file load attempt
+                self.config.config = self._get_default_config() # Manually set the config dict
+
         # Set up monitoring directory
-        self.monitoring_dir = Path(self.config.get("monitoring_dir", "monitoring"))
+        self.monitoring_dir = Path(self.config.get("monitoring_dir", self._get_default_config()["monitoring_dir"]))
         self.monitoring_dir.mkdir(parents=True, exist_ok=True)
         
         # Model-specific monitoring directory
@@ -60,27 +70,9 @@ class ModelMonitor:
         
         logger.info(f"Initialized model monitoring for {model_name} version {version}")
     
-    def _load_config(self) -> Dict[str, Any]:
-        """
-        Load monitoring configuration.
-        
-        Returns:
-            Configuration dictionary
-        """
-        try:
-            if not self.config_path.exists():
-                logger.warning(f"Monitoring config file {self.config_path} not found, using defaults")
-                return self._get_default_config()
-            
-            with open(self.config_path, "r") as f:
-                config = json.load(f)
-            
-            logger.info(f"Loaded monitoring configuration from {self.config_path}")
-            return config
-        except Exception as e:
-            logger.error(f"Failed to load monitoring config: {e}")
-            return self._get_default_config()
-    
+    # Removed _load_config method as Config class handles loading.
+    # _get_default_config is kept for now if direct Config init with defaults is needed as fallback.
+
     def _get_default_config(self) -> Dict[str, Any]:
         """
         Get default monitoring configuration.
@@ -106,7 +98,7 @@ class ModelMonitor:
             },
             "alerts": {
                 "enabled": True,
-                "channels": ["log"],
+            "channels": ["log"], # Ensure this is a list
                 "throttle_period_seconds": 3600  # Don't send duplicate alerts for 1 hour
             },
             "prometheus": {
@@ -198,7 +190,7 @@ class ModelMonitor:
         self._check_metric_thresholds(metrics)
         
         # Update Prometheus metrics if enabled
-        if self.config.get("prometheus", {}).get("enabled", False):
+        if self.config.get("prometheus.enabled", False):
             self._update_prometheus_metrics(metrics)
         
         logger.info(f"Recorded metrics for {self.model_name} {self.version}: {metrics}")
@@ -256,12 +248,31 @@ class ModelMonitor:
         thresholds = self.config.get("metrics", {}).get("thresholds", {})
         
         for metric_name, value in metrics.items():
-            if metric_name in thresholds:
-                threshold = thresholds[metric_name]
-                if value < threshold:
-                    alert_message = f"Metric {metric_name} below threshold: {value:.4f} < {threshold:.4f}"
+            if metric_name in thresholds: # Accessing potentially nested dict
+                threshold_val = thresholds[metric_name] # This could be a direct value or another dict
+                # Assuming thresholds is a flat dict like: {"accuracy": 0.75}
+                if isinstance(threshold_val, (int, float)) and value < threshold_val:
+                    alert_message = f"Metric {metric_name} below threshold: {value:.4f} < {threshold_val:.4f}"
                     self._create_alert("metric_threshold", alert_message, {
                         "metric": metric_name,
+                        "value": value,
+                        "threshold": threshold_val
+                    })
+                elif isinstance(threshold_val, dict): # Example: {"accuracy": {"min": 0.7, "max": 0.9}}
+                    if "min" in threshold_val and value < threshold_val["min"]:
+                         alert_message = f"Metric {metric_name} below min threshold: {value:.4f} < {threshold_val['min']:.4f}"
+                         self._create_alert("metric_threshold_min", alert_message, {
+                             "metric": metric_name,
+                             "value": value,
+                             "threshold_min": threshold_val['min']
+                         })
+                    if "max" in threshold_val and value > threshold_val["max"]:
+                        alert_message = f"Metric {metric_name} above max threshold: {value:.4f} > {threshold_val['max']:.4f}"
+                        self._create_alert("metric_threshold_max", alert_message, {
+                            "metric": metric_name,
+                            "value": value,
+                            "threshold_max": threshold_val['max']
+                        })
                         "value": value,
                         "threshold": threshold
                     })
@@ -343,7 +354,7 @@ class ModelMonitor:
             message: Alert message
             details: Additional alert details
         """
-        if not self.config.get("alerts", {}).get("enabled", True):
+            if not self.config.get("alerts.enabled", True):
             return
         
         # Create alert
@@ -357,12 +368,12 @@ class ModelMonitor:
         }
         
         # Check for duplicate alerts within throttle period
-        throttle_period = self.config.get("alerts", {}).get("throttle_period_seconds", 3600)
+        throttle_period = self.config.get("alerts.throttle_period_seconds", 3600)
         duplicate = False
         
         if self.alerts:
             last_alert = self.alerts[-1]
-            if last_alert["type"] == alert_type and last_alert["message"] == message:
+            if last_alert["type"] == alert_type and last_alert["message"] == message: # Simple field check
                 last_time = datetime.fromisoformat(last_alert["timestamp"])
                 current_time = datetime.fromisoformat(alert["timestamp"])
                 seconds_diff = (current_time - last_time).total_seconds()
@@ -374,7 +385,7 @@ class ModelMonitor:
             self.alerts.append(alert)
             
             # Send alert through configured channels
-            channels = self.config.get("alerts", {}).get("channels", ["log"])
+            channels = self.config.get("alerts.channels", ["log"]) # Ensure list
             
             if "log" in channels:
                 logger.warning(f"ALERT: {message}")
@@ -392,10 +403,10 @@ class ModelMonitor:
             metrics: Dictionary of metric names and values
         """
         try:
-            if not self.config.get("prometheus", {}).get("enabled", False):
+            if not self.config.get("prometheus.enabled", False):
                 return
             
-            export_path = Path(self.config.get("prometheus", {}).get("export_path", "monitoring/prometheus"))
+            export_path = Path(self.config.get("prometheus.export_path", "monitoring/prometheus"))
             export_path.mkdir(parents=True, exist_ok=True)
             
             metrics_file = export_path / f"{self.model_name}_{self.version}_metrics.prom"

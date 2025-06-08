@@ -5,7 +5,7 @@ This module provides comprehensive market analysis functionality by integrating
 various astrological techniques including planetary positions, aspects, yogas,
 and other factors to generate holistic market forecasts and trend predictions.
 """
-
+import warnings # Added import
 from typing import Dict, List, Optional, Union, Tuple
 import datetime
 import numpy as np
@@ -24,6 +24,11 @@ def analyze_market_trend(
     calculator: Optional[PlanetaryCalculator] = None
 ) -> Dict[str, Union[str, float, List[str]]]:
     """
+    .. deprecated:: TBD
+       This function is deprecated and may be removed in a future version.
+       Please use `VedicAnalyzer.analyze_date()` from
+       `src.astro_engine.vedic_analysis` for a more comprehensive analysis.
+
     Analyze market trend based on planetary positions using Vedic astrology principles.
     
     Args:
@@ -141,6 +146,7 @@ def analyze_market_trend(
         "key_factors": key_factors,
         "aspects": aspects
     }
+    warnings.warn("analyze_market_trend is deprecated and may be removed in a future version. Please use VedicAnalyzer.analyze_date() from src.astro_engine.vedic_analysis for a more comprehensive analysis.", DeprecationWarning, stacklevel=2)
 
 
 def analyze_comprehensive_market_forecast(
@@ -149,6 +155,11 @@ def analyze_comprehensive_market_forecast(
     yoga_analyzer: Optional[FinancialYogaAnalyzer] = None
 ) -> Dict[str, Union[str, float, List[Dict], Dict]]:
     """
+    .. deprecated:: TBD
+       This function is deprecated and may be removed in a future version.
+       Please use `VedicAnalyzer.analyze_date()` from
+       `src.astro_engine.vedic_analysis` for a more comprehensive analysis.
+
     Generate a comprehensive market forecast by combining multiple analysis techniques.
     
     Args:
@@ -246,11 +257,18 @@ def analyze_comprehensive_market_forecast(
         "yogas": yogas,
         "description": description
     }
+    warnings.warn("analyze_comprehensive_market_forecast is deprecated and may be removed in a future version. Please use VedicAnalyzer.analyze_date() from src.astro_engine.vedic_analysis for a more comprehensive analysis.", DeprecationWarning, stacklevel=2)
 def get_vedic_market_analysis(date, calculator=None):
     """
+    .. deprecated:: TBD
+       This function is deprecated. It was intended as a bridge to `VedicAnalyzer`
+       but is not currently used. Direct usage of `VedicAnalyzer.analyze_date()`
+       from `src.astro_engine.vedic_analysis` is recommended.
+
     Get comprehensive Vedic market analysis using the new VedicAnalyzer.
     This is the recommended function for new code.
     """
+    warnings.warn("get_vedic_market_analysis is deprecated. This function was intended to be a bridge to VedicAnalyzer but is not used. Direct usage of VedicAnalyzer.analyze_date() is recommended.", DeprecationWarning, stacklevel=2)
     from .vedic_analysis import VedicAnalyzer
     analyzer = VedicAnalyzer()
     return analyzer.analyze_date(date)

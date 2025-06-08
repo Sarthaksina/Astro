@@ -50,3 +50,126 @@ def get_planet_name(planet_id: int) -> str:
         Name of the planet
     """
     return PLANET_NAMES.get(planet_id, f"Unknown Planet {planet_id}")
+
+# Financial significance of planets (primarily for Dasha systems and interpretations)
+# This mapping provides insights into how each planet's period might influence market sectors or trends.
+PLANET_FINANCIAL_SIGNIFICANCE = {
+    SUN: {
+        "trend": "neutral",
+        "volatility": "moderate",
+        "sectors": ["government", "gold", "energy", "leadership"],
+        "description": "Represents authority, government policy, and leadership"
+    },
+    MOON: {
+        "trend": "variable",
+        "volatility": "high",
+        "sectors": ["public sentiment", "real estate", "food", "retail"],
+        "description": "Represents public sentiment, liquidity, and consumer behavior"
+    },
+    MERCURY: {
+        "trend": "neutral",
+        "volatility": "high",
+        "sectors": ["communication", "technology", "media", "trade"],
+        "description": "Represents communication, technology, and trading activity"
+    },
+    VENUS: {
+        "trend": "bullish",
+        "volatility": "low",
+        "sectors": ["luxury", "entertainment", "fashion", "art"],
+        "description": "Represents luxury goods, entertainment, and growth sectors"
+    },
+    MARS: {
+        "trend": "bearish",
+        "volatility": "very high",
+        "sectors": ["military", "construction", "sports", "manufacturing"],
+        "description": "Represents aggressive action, competition, and conflict"
+    },
+    JUPITER: {
+        "trend": "bullish",
+        "volatility": "low",
+        "sectors": ["finance", "education", "legal", "religion"],
+        "description": "Represents expansion, optimism, and growth"
+    },
+    SATURN: {
+        "trend": "bearish",
+        "volatility": "low",
+        "sectors": ["infrastructure", "mining", "agriculture", "old industries"],
+        "description": "Represents contraction, discipline, and long-term trends"
+    },
+    RAHU: { # North Node
+        "trend": "variable",
+        "volatility": "extreme",
+        "sectors": ["foreign markets", "innovation", "speculation", "new technologies"],
+        "description": "Represents speculation, innovation, and sudden growth"
+    },
+    KETU: { # South Node
+        "trend": "bearish",
+        "volatility": "extreme",
+        "sectors": ["spiritual", "pharmaceuticals", "hidden sectors", "dissolution"],
+        "description": "Represents dissolution, spiritual values, and hidden factors"
+    }
+}
+
+# Zodiac signs (0-indexed: Aries=0, Taurus=1, ..., Pisces=11)
+ARIES = 0
+TAURUS = 1
+GEMINI = 2
+CANCER = 3
+LEO = 4
+VIRGO = 5
+LIBRA = 6
+SCORPIO = 7
+SAGITTARIUS = 8
+CAPRICORN = 9
+AQUARIUS = 10
+PISCES = 11
+
+ZODIAC_SIGN_NAMES = [
+    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+]
+
+# Sign rulers mapping (Sign Index -> Planet ID)
+SIGN_RULERS = {
+    ARIES: MARS,
+    TAURUS: VENUS,
+    GEMINI: MERCURY,
+    CANCER: MOON,
+    LEO: SUN,
+    VIRGO: MERCURY,
+    LIBRA: VENUS,
+    SCORPIO: MARS,
+    SAGITTARIUS: JUPITER,
+    CAPRICORN: SATURN,
+    AQUARIUS: SATURN, # Traditional ruler
+    PISCES: JUPITER  # Traditional ruler
+}
+
+def get_sign_ruler(sign_index: int) -> int:
+    """
+    Get the ruling planet of a zodiac sign.
+
+    Args:
+        sign_index: Index of the sign (0 for Aries, 1 for Taurus, etc.)
+
+    Returns:
+        Planet ID of the ruling planet. Defaults to SUN if sign_index is invalid.
+    """
+    return SIGN_RULERS.get(sign_index, SUN)
+
+# Vimshottari Dasha related constants
+VIMSHOTTARI_PERIODS = {
+    KETU: 7,
+    VENUS: 20,
+    SUN: 6,
+    MOON: 10,
+    MARS: 7,
+    RAHU: 18,
+    JUPITER: 16,
+    SATURN: 19,
+    MERCURY: 17
+}
+
+VIMSHOTTARI_ORDER = [
+    KETU, VENUS, SUN, MOON, MARS, RAHU, JUPITER, SATURN, MERCURY
+]

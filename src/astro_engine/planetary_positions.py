@@ -21,7 +21,8 @@ from datetime import datetime, timedelta
 
 from .constants import (
     SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU,
-    GEOCENTRIC, HELIOCENTRIC
+    GEOCENTRIC, HELIOCENTRIC,
+    VIMSHOTTARI_PERIODS, VIMSHOTTARI_ORDER # Added imports
 )
 
 
@@ -405,3 +406,86 @@ class PlanetaryCalculator:
             'birth_nakshatra': nakshatra + 1,  # 1-based nakshatra
             'dashas': dashas
         }
+
+    # Methods moved from DashaCalculator
+    def _calculate_antardashas(self, mahadasha_lord: int, start_date: datetime, duration_years: float) -> List[Dict]:
+        """
+        Calculate antardashas (sub-periods) for a mahadasha.
+
+        Args:
+            mahadasha_lord: Planet ID of the mahadasha lord
+            start_date: Start date of the mahadasha
+            duration_years: Duration of the mahadasha in years
+
+        Returns:
+            List of antardashas with their details
+        """
+        antardashas = []
+        mahadasha_days = duration_years * 365.25
+
+        # Start with the mahadasha lord itself
+        lord_index = VIMSHOTTARI_ORDER.index(mahadasha_lord) # Use imported constant
+        current_date = start_date
+
+        for i in range(9):
+            planet_index = (lord_index + i) % 9
+            planet = VIMSHOTTARI_ORDER[planet_index] # Use imported constant
+
+            # Calculate proportion and duration
+            proportion = VIMSHOTTARI_PERIODS[planet] / 120 # Use imported constant
+            antardasha_days = mahadasha_days * proportion
+
+            antardasha = {
+                "planet": planet,
+                "start_date": current_date,
+                "end_date": current_date + timedelta(days=antardasha_days),
+                "duration_days": antardasha_days,
+                "pratyantardashas": []  # Sub-sub-periods
+            }
+
+            # Calculate pratyantardashas (sub-sub-periods)
+            antardasha["pratyantardashas"] = self._calculate_pratyantardashas(
+                planet, antardasha["start_date"], antardasha_days)
+
+            antardashas.append(antardasha)
+            current_date = antardasha["end_date"]
+
+        return antardashas
+
+    def _calculate_pratyantardashas(self, antardasha_lord: int, start_date: datetime, duration_days: float) -> List[Dict]:
+        """
+        Calculate pratyantardashas (sub-sub-periods) for an antardasha.
+
+        Args:
+            antardasha_lord: Planet ID of the antardasha lord
+            start_date: Start date of the antardasha
+            duration_days: Duration of the antardasha in days
+
+        Returns:
+            List of pratyantardashas with their details
+        """
+        pratyantardashas = []
+
+        # Start with the antardasha lord itself
+        lord_index = VIMSHOTTARI_ORDER.index(antardasha_lord) # Use imported constant
+        current_date = start_date
+
+        for i in range(9):
+            planet_index = (lord_index + i) % 9
+            planet = VIMSHOTTARI_ORDER[planet_index] # Use imported constant
+
+            # Calculate proportion and duration
+            proportion = VIMSHOTTARI_PERIODS[planet] / 120 # Use imported constant
+            pratyantardasha_days = duration_days * proportion
+
+            pratyantardasha = {
+                "planet": planet,
+                "start_date": current_date,
+                "end_date": current_date + timedelta(days=pratyantardasha_days),
+                "duration_days": pratyantardasha_days
+            }
+
+            pratyantardashas.append(pratyantardasha)
+            current_date = pratyantardasha["end_date"]
+
+        return pratyantardashas
