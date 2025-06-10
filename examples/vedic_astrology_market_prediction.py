@@ -27,9 +27,12 @@ from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTS
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.astro_engine.planetary_positions import (
-    PlanetaryCalculator, analyze_market_trend, analyze_financial_yogas,
+    PlanetaryCalculator,
     SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, URANUS, NEPTUNE, PLUTO, RAHU, KETU
 )
+# Removed analyze_market_trend, analyze_financial_yogas from planetary_positions import
+from src.astro_engine.vedic_analysis import VedicAnalyzer # Added
+from src.astro_engine.financial_yogas import FinancialYogaAnalyzer # Added
 from src.feature_engineering.astrological_features import AstrologicalFeatureGenerator
 from src.data_acquisition.market_data import fetch_historical_data
 from src.pipeline.prediction_pipeline import PredictionPipeline
@@ -101,6 +104,8 @@ def analyze_market_with_vedic_astrology(start_date, end_date, symbol="^DJI"):
     
     # Initialize calculator
     calculator = PlanetaryCalculator()
+    vedic_analyzer = VedicAnalyzer() # Added
+    yoga_analyzer = FinancialYogaAnalyzer(calculator) # Added
     
     # Fetch historical market data
     print(f"Fetching market data for {symbol} from {start_date} to {end_date}...")
@@ -125,10 +130,24 @@ def analyze_market_with_vedic_astrology(start_date, end_date, symbol="^DJI"):
         positions = calculator.get_all_planets(date_str)
         
         # Analyze market trend
-        trend = analyze_market_trend(positions, date_str, calculator)
+        # trend = analyze_market_trend(positions, date_str, calculator) # Old call
+        vedic_analysis_results = vedic_analyzer.analyze_date(date_str) # New call
+        trend_info = vedic_analysis_results.get("integrated_forecast", {})
+        trend = {
+            'primary_trend': trend_info.get("trend", "Neutral"),
+            'strength': trend_info.get("trend_score", 0.0) * 100, # Example scaling
+            'reversal_probability': 0.0 # Placeholder, as this is not in VedicAnalyzer output
+        }
         
         # Detect financial yogas
-        yogas = analyze_financial_yogas(positions, calculator)
+        # yogas = analyze_financial_yogas(positions, calculator) # Old call
+        yogas_analysis_result = yoga_analyzer.analyze_all_financial_yogas(positions)
+        all_yogas_list = []
+        if isinstance(yogas_analysis_result, dict):
+            for yoga_type_list in yogas_analysis_result.values():
+                if isinstance(yoga_type_list, list):
+                    all_yogas_list.extend(yoga_type_list)
+        yogas = all_yogas_list # 'yogas' is now a flat list of yoga dicts
         
         # Store results
         results.append({

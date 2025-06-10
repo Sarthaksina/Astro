@@ -173,3 +173,34 @@ VIMSHOTTARI_PERIODS = {
 VIMSHOTTARI_ORDER = [
     KETU, VENUS, SUN, MOON, MARS, RAHU, JUPITER, SATURN, MERCURY
 ]
+
+# Nakshatra Properties
+NAKSHATRA_PROPERTIES = {
+    1: {"name": "Ashwini", "financial_nature": "Volatile", "ruler": KETU},
+    2: {"name": "Bharani", "financial_nature": "Bearish", "ruler": VENUS}, # Adjusted to Bearish from Bearish/Volatile
+    3: {"name": "Krittika", "financial_nature": "Volatile", "ruler": SUN},
+    4: {"name": "Rohini", "financial_nature": "Bullish", "ruler": MOON},
+    5: {"name": "Mrigashira", "financial_nature": "Volatile", "ruler": MARS}, # Adjusted to Volatile from Neutral/Volatile
+    6: {"name": "Ardra", "financial_nature": "Bearish", "ruler": RAHU}, # Adjusted to Bearish from Bearish/Volatile
+    7: {"name": "Punarvasu", "financial_nature": "Bullish", "ruler": JUPITER},
+    8: {"name": "Pushya", "financial_nature": "Bullish", "ruler": SATURN},
+    9: {"name": "Ashlesha", "financial_nature": "Bearish", "ruler": MERCURY}, # Adjusted to Bearish from Bearish/Volatile
+    10: {"name": "Magha", "financial_nature": "Volatile", "ruler": KETU}, # Adjusted to Volatile from Neutral/Volatile
+    11: {"name": "Purva Phalguni", "financial_nature": "Bullish", "ruler": VENUS},
+    12: {"name": "Uttara Phalguni", "financial_nature": "Bullish", "ruler": SUN},
+    13: {"name": "Hasta", "financial_nature": "Bullish", "ruler": MOON}, # Adjusted to Bullish from Bullish/Neutral
+    14: {"name": "Chitra", "financial_nature": "Volatile", "ruler": MARS},
+    15: {"name": "Swati", "financial_nature": "Volatile", "ruler": RAHU}, # Adjusted to Volatile from Neutral/Volatile
+    16: {"name": "Vishakha", "financial_nature": "Volatile", "ruler": JUPITER}, # Adjusted to Volatile from Bullish/Volatile
+    17: {"name": "Anuradha", "financial_nature": "Bullish", "ruler": SATURN},
+    18: {"name": "Jyeshtha", "financial_nature": "Bearish", "ruler": MERCURY}, # Adjusted to Bearish from Bearish/Volatile
+    19: {"name": "Mula", "financial_nature": "Bearish", "ruler": KETU}, # Adjusted to Bearish from Bearish/Volatile
+    20: {"name": "Purva Ashadha", "financial_nature": "Bullish", "ruler": VENUS},
+    21: {"name": "Uttara Ashadha", "financial_nature": "Bullish", "ruler": SUN},
+    22: {"name": "Shravana", "financial_nature": "Bullish", "ruler": MOON}, # Adjusted to Bullish from Bullish/Neutral
+    23: {"name": "Dhanishta", "financial_nature": "Volatile", "ruler": MARS}, # Adjusted to Volatile from Bullish/Volatile
+    24: {"name": "Shatabhisha", "financial_nature": "Volatile", "ruler": RAHU}, # Adjusted to Volatile from Neutral/Volatile
+    25: {"name": "Purva Bhadrapada", "financial_nature": "Bearish", "ruler": JUPITER}, # Adjusted to Bearish from Bearish/Volatile
+    26: {"name": "Uttara Bhadrapada", "financial_nature": "Bullish", "ruler": SATURN}, # Adjusted to Bullish from Bullish/Neutral
+    27: {"name": "Revati", "financial_nature": "Bullish", "ruler": MERCURY}
+}

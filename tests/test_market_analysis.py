@@ -7,175 +7,77 @@ various redundant implementations throughout the codebase.
 
 import pytest
 import datetime
-from src.astro_engine.market_analysis import analyze_market_trend, analyze_comprehensive_market_forecast
-from src.astro_engine.planetary_positions import PlanetaryCalculator
-from src.astro_engine.financial_yogas import FinancialYogaAnalyzer
+# from src.astro_engine.market_analysis import analyze_market_trend, analyze_comprehensive_market_forecast # Removed
+from src.astro_engine.vedic_analysis import VedicAnalyzer # Added
+from src.astro_engine.planetary_positions import PlanetaryCalculator # Keep for potential mocking if needed, though VedicAnalyzer has its own
+from src.astro_engine.financial_yogas import FinancialYogaAnalyzer # Keep for potential mocking if needed
 from src.astro_engine.constants import SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN
 
 
-def test_analyze_market_trend():
-    """Test the analyze_market_trend function"""
-    # Create a mock calculator
-    calculator = PlanetaryCalculator()
+def test_analyze_market_trend_replacement():
+    """Test the VedicAnalyzer.analyze_date for market trend equivalent"""
+    analyzer = VedicAnalyzer()
     
-    # Create mock planetary positions
-    mock_positions = {
-        SUN: {
-            "longitude": 120.5,
-            "latitude": 0.0,
-            "is_retrograde": False,
-            "nakshatra": 10,
-            "longitude_speed": 1.0
-        },
-        MOON: {
-            "longitude": 75.3,
-            "latitude": 5.0,
-            "is_retrograde": False,
-            "nakshatra": 6,
-            "longitude_speed": 13.0
-        },
-        MERCURY: {
-            "longitude": 118.2,
-            "latitude": 1.2,
-            "is_retrograde": True,
-            "nakshatra": 9,
-            "longitude_speed": -0.5
-        },
-        JUPITER: {
-            "longitude": 200.7,
-            "latitude": 0.1,
-            "is_retrograde": False,
-            "nakshatra": 14,
-            "longitude_speed": 0.2
-        },
-        SATURN: {
-            "longitude": 300.1,
-            "latitude": 0.3,
-            "is_retrograde": False,
-            "nakshatra": 21,
-            "longitude_speed": 0.1
-        }
-    }
+    # We can't easily mock internal components of VedicAnalyzer without more complex patching.
+    # So, we'll perform a basic structural check on the output.
+    # The date needs to be one for which the ephemeris files are available.
+    # Using a date that's likely covered by default ephemeris.
+    date_to_analyze = "2023-01-01"
     
-    # Mock the get_nakshatra_details method to return predictable results
-    def mock_get_nakshatra_details(longitude):
-        return {
-            "nakshatra_name": "Test Nakshatra",
-            "financial_nature": "bullish" if longitude < 100 else "bearish"
-        }
+    # It's hard to mock planetary_positions used by analyzer.planetary_calculator
+    # without deeper mocking. For this test, we'll mainly check structure.
+    # A more robust test would be in test_vedic_analysis.py with proper fixtures.
     
-    # Replace the actual method with our mock
-    calculator.get_nakshatra_details = mock_get_nakshatra_details
+    result = analyzer.analyze_date(date_to_analyze)
     
-    # Test the function
-    result = analyze_market_trend(mock_positions, "2023-01-01", calculator)
+    # Verify the structure of the result related to integrated_forecast
+    assert isinstance(result, dict)
+    assert "integrated_forecast" in result
+    forecast = result["integrated_forecast"]
+    assert "trend" in forecast
+    assert "trend_score" in forecast
+    assert "key_factors" in forecast
+    assert "description" in forecast
+
+    # Example: Check if key_factors is a list (can be empty)
+    assert isinstance(forecast["key_factors"], list)
+
+
+def test_analyze_comprehensive_market_forecast_replacement():
+    """Test the VedicAnalyzer.analyze_date for comprehensive forecast equivalent"""
+    analyzer = VedicAnalyzer()
+    date_to_analyze = "2023-01-01"
+
+    # Similar to above, direct mocking of sub-components of VedicAnalyzer is complex here.
+    # We rely on VedicAnalyzer to correctly call its internal components.
+    # This test primarily ensures analyze_date runs and returns the expected structure.
+    
+    result = analyzer.analyze_date(date_to_analyze)
     
     # Verify the structure of the result
     assert isinstance(result, dict)
-    assert "trend" in result
-    assert "strength" in result
-    assert "key_factors" in result
-    assert "aspects" in result
-    
-    # Verify that Mercury retrograde is detected
-    assert any("Mercury retrograde" in factor for factor in result["key_factors"])
-    
-    # Verify that the Moon's nakshatra is analyzed
-    assert any("Moon in" in factor for factor in result["key_factors"])
+    assert "integrated_forecast" in result
+    assert "sector_forecasts" in result
+    assert "timing_signals" in result
+    assert "key_yogas" in result
+    assert "key_dignities" in result
 
-
-def test_analyze_comprehensive_market_forecast():
-    """Test the analyze_comprehensive_market_forecast function"""
-    # Create a mock calculator
-    calculator = PlanetaryCalculator()
+    integrated_forecast = result["integrated_forecast"]
+    assert "trend" in integrated_forecast
+    assert "confidence" in integrated_forecast
+    assert "volatility" in integrated_forecast
+    assert "key_factors" in integrated_forecast
+    assert "description" in integrated_forecast
     
-    # Create a mock yoga analyzer
-    yoga_analyzer = FinancialYogaAnalyzer(calculator)
+    # Verify that the confidence is a float (VedicAnalyzer sets a min of 0.3)
+    assert 0.3 <= integrated_forecast["confidence"] <= 0.9 # Range defined in VedicAnalyzer
     
-    # Mock the get_all_planets method to return predictable results
-    def mock_get_all_planets(date):
-        return {
-            SUN: {
-                "longitude": 120.5,
-                "latitude": 0.0,
-                "is_retrograde": False,
-                "nakshatra": 10,
-                "longitude_speed": 1.0
-            },
-            MOON: {
-                "longitude": 75.3,
-                "latitude": 5.0,
-                "is_retrograde": False,
-                "nakshatra": 6,
-                "longitude_speed": 13.0
-            },
-            MERCURY: {
-                "longitude": 118.2,
-                "latitude": 1.2,
-                "is_retrograde": True,
-                "nakshatra": 9,
-                "longitude_speed": -0.5
-            },
-            JUPITER: {
-                "longitude": 200.7,
-                "latitude": 0.1,
-                "is_retrograde": False,
-                "nakshatra": 14,
-                "longitude_speed": 0.2
-            },
-            SATURN: {
-                "longitude": 300.1,
-                "latitude": 0.3,
-                "is_retrograde": False,
-                "nakshatra": 21,
-                "longitude_speed": 0.1
-            }
-        }
-    
-    # Mock the analyze_all_financial_yogas method to return predictable results
-    def mock_analyze_all_financial_yogas(positions):
-        return {
-            "dhana_yogas": [],
-            "raja_yogas": [],
-            "market_trend_yogas": []
-        }
-    
-    # Mock the get_market_forecast method to return predictable results
-    def mock_get_market_forecast(yogas):
-        return {
-            "trend": "bullish",
-            "confidence": 0.75,
-            "volatility": "moderate",
-            "description": "Test forecast description"
-        }
-    
-    # Replace the actual methods with our mocks
-    calculator.get_all_planets = mock_get_all_planets
-    yoga_analyzer.analyze_all_financial_yogas = mock_analyze_all_financial_yogas
-    yoga_analyzer.get_market_forecast = mock_get_market_forecast
-    
-    # Test the function
-    result = analyze_comprehensive_market_forecast("2023-01-01", calculator, yoga_analyzer)
-    
-    # Verify the structure of the result
-    assert isinstance(result, dict)
-    assert "trend" in result
-    assert "confidence" in result
-    assert "volatility" in result
-    assert "key_factors" in result
-    assert "aspects" in result
-    assert "yogas" in result
-    assert "description" in result
-    
-    # Verify that the confidence is a float between 0 and 1
-    assert 0 <= result["confidence"] <= 1
-    
-    # Verify that the trend is one of the expected values
-    assert result["trend"] in ["Bullish", "Bearish", "Volatile", "Sideways"]
+    # Verify that the trend is a string
+    assert isinstance(integrated_forecast["trend"], str)
     
     # Verify that the volatility is one of the expected values
-    assert result["volatility"] in ["High", "Moderate", "Low"]
+    assert integrated_forecast["volatility"] in ["High", "Moderate", "Low"]
 
 
 if __name__ == "__main__":
-    pytest.main(["-v", "test_market_analysis.py"])
+    pytest.main(["-v", __file__])

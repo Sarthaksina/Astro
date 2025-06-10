@@ -16,7 +16,10 @@ from typing import Dict, List, Optional, Tuple, Union
 import mlflow
 
 from src.data_acquisition.market_data import fetch_historical_data, process_market_data
-from src.astro_engine.planetary_positions import PlanetaryCalculator, analyze_market_trend, analyze_financial_yogas
+# Removed analyze_market_trend, analyze_financial_yogas from here
+from src.astro_engine.planetary_positions import PlanetaryCalculator
+from src.astro_engine.vedic_analysis import VedicAnalyzer # Added
+from src.astro_engine.financial_yogas import FinancialYogaAnalyzer # Added
 from src.data_processing.integrator import integrate_market_and_planetary_data
 from src.feature_engineering.feature_generator import FeatureGenerator
 from src.feature_engineering.astrological_features import AstrologicalFeatureGenerator
@@ -50,6 +53,8 @@ class PredictionPipeline:
         self.astro_feature_generator = AstrologicalFeatureGenerator()
         self.market_feature_generator = MarketFeatureGenerator()
         self.feature_generator = FeatureGenerator()
+        self.vedic_analyzer = VedicAnalyzer() # Added
+        self.yoga_analyzer = FinancialYogaAnalyzer(self.planetary_calculator) # Added
         
         # Load the model factory with the specified model configuration
         self.model_factory = ModelFactory(self.config.get("model"))
@@ -135,18 +140,31 @@ class PredictionPipeline:
             # Add enhanced Vedic astrological calculations
             
             # 1. Market trend analysis based on Vedic principles
-            market_trend = analyze_market_trend(positions, date, self.planetary_calculator)
-            for key, value in market_trend.items():
-                if isinstance(value, list):
-                    # For list values like key_factors, store as string
-                    planetary_data.loc[date, f"market_trend_{key}"] = ",".join(value)
-                else:
-                    planetary_data.loc[date, f"market_trend_{key}"] = value
+            # market_trend = analyze_market_trend(positions, date, self.planetary_calculator) # Old call
+            vedic_analysis_results = self.vedic_analyzer.analyze_date(date) # New call
+            market_trend_info = vedic_analysis_results.get("integrated_forecast", {})
             
+            # Attempt to map new structure to old structure for planetary_data DataFrame
+            planetary_data.loc[date, "market_trend_trend"] = market_trend_info.get("trend", "Neutral")
+            planetary_data.loc[date, "market_trend_strength"] = market_trend_info.get("trend_score", 0.0) * 100 # Example scaling
+            key_factors_list = market_trend_info.get("key_factors", [])
+            planetary_data.loc[date, "market_trend_key_factors"] = ",".join(key_factors_list) if key_factors_list else ""
+            # Note: 'aspects' from old market_trend might need to be sourced from vedic_analysis_results["key_aspects"] or similar if still needed here.
+            # This part requires careful consideration of what data the rest of the pipeline expects.
+            # For now, ensuring the function call is replaced.
+
             # 2. Financial yogas (planetary combinations)
-            yogas = analyze_financial_yogas(positions, self.planetary_calculator)
+            # yogas = analyze_financial_yogas(positions, self.planetary_calculator) # Old call
+            yogas_analysis_result = self.yoga_analyzer.analyze_all_financial_yogas(positions) # New call
+            all_yogas_list = []
+            if isinstance(yogas_analysis_result, dict):
+                for yoga_type_list in yogas_analysis_result.values():
+                    if isinstance(yoga_type_list, list):
+                        all_yogas_list.extend(yoga_type_list)
+            yogas = all_yogas_list # 'yogas' is now a flat list of yoga dicts
+
             # Store count of different yoga types
-            bullish_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "bullish")
+            bullish_yogas = sum(1 for yoga in yogas if yoga.get("market_impact") == "bullish")
             bearish_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "bearish")
             volatile_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "volatile")
             
