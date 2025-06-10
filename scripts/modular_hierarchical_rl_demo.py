@@ -25,17 +25,19 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from datetime import datetime
-import logging
+# import logging # Removed
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+# logger = logging.getLogger(__name__) # Removed
+from src.utils.logger import get_logger # Added
+logger = get_logger(__name__) # Added
 
 # Import the modular hierarchical RL components
 from src.trading.modular_hierarchical_rl import (

@@ -12,7 +12,7 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey, MetaData, Table
+from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey, MetaData, Table, Index # Added Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -629,10 +629,32 @@ class Prediction(Base):
     confidence = Column(Float, nullable=True)
     features_used = Column(JSONB, nullable=True)
     metadata = Column(JSONB, nullable=True)
+    model_version = Column(String(100), nullable=True) # Added model_version
     
     def __repr__(self):
-        return f"<Prediction(timestamp={self.timestamp}, symbol={self.symbol}, model_id={self.model_id})>"
+        return f"<Prediction(timestamp={self.timestamp}, symbol={self.symbol}, model_id={self.model_id}, version={self.model_version})>"
 
+# Copied from src/data_processing/models.py and adapted
+class PlanetaryAspect(Base):
+    """Planetary aspect data model for storing relationships between planets"""
+    __tablename__ = "planetary_aspects"
+    __table_args__ = (
+        Index('idx_aspects_time_planets', 'timestamp', 'planet1_id', 'planet2_id'),
+        {"schema": "cosmic_data"}
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, nullable=False, index=True)
+    planet1_id = Column(Integer, nullable=False)
+    planet2_id = Column(Integer, nullable=False)
+    aspect_type = Column(String(50), nullable=False)  # Conjunction, Opposition, Trine, etc. Length 50 assumed
+    aspect_angle = Column(Float, nullable=False)  # Ideal angle of the aspect
+    actual_angle = Column(Float, nullable=False)  # Actual angle between planets
+    orb = Column(Float, nullable=False)  # Deviation from exact aspect
+    is_applying = Column(Boolean, nullable=False)  # True if aspect is getting closer to exact
+
+    def __repr__(self):
+        return f"<PlanetaryAspect(timestamp='{self.timestamp}', aspect='{self.aspect_type}', planets={self.planet1_id}-{self.planet2_id})>"
 
 class DataSyncLog(Base):
     """Model for tracking data synchronization."""

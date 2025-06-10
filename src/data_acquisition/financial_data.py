@@ -20,8 +20,9 @@ from pathlib import Path
 import json
 
 # Configure logging
-from src.utils.logging_config import setup_logging
-logger = setup_logging(__name__)
+from src.utils.logger import get_logger # Changed from setup_logger
+logger = get_logger(__name__) # Changed from setup_logger
+from src.utils.file_io import save_dataframe # Added import
 
 class FinancialDataSource:
     """Base class for financial data sources."""
@@ -58,24 +59,13 @@ class FinancialDataSource:
             data: DataFrame to save
             filename: Name of the file
         """
-        filepath = os.path.join(self.data_dir, filename)
-        
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        # Determine file format based on extension
-        if filename.endswith('.csv'):
-            data.to_csv(filepath)
-        elif filename.endswith('.parquet'):
-            data.to_parquet(filepath)
-        elif filename.endswith('.pickle') or filename.endswith('.pkl'):
-            data.to_pickle(filepath)
+        filepath_str = os.path.join(self.data_dir, filename)
+        if save_dataframe(df=data, file_path_str=filepath_str, create_dirs=True):
+            # Original logger message can be kept if desired, or rely on save_dataframe's logging.
+            # logger.info(f"Saved data to {filepath_str} (via utility)")
+            pass # save_dataframe already logs success
         else:
-            # Default to parquet
-            filepath = f"{filepath}.parquet"
-            data.to_parquet(filepath)
-            
-        logger.info(f"Saved data to {filepath}")
+            logger.error(f"Failed to save data to {filepath_str} using utility.")
         
     def load_data(self, filename: str) -> pd.DataFrame:
         """
@@ -614,24 +604,12 @@ class MarketDataProcessor:
             data: DataFrame to save
             filename: Name of the file
         """
-        filepath = os.path.join(self.data_dir, filename)
-        
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        # Determine file format based on extension
-        if filename.endswith('.csv'):
-            data.to_csv(filepath)
-        elif filename.endswith('.parquet'):
-            data.to_parquet(filepath)
-        elif filename.endswith('.pickle') or filename.endswith('.pkl'):
-            data.to_pickle(filepath)
+        filepath_str = os.path.join(self.data_dir, filename)
+        if save_dataframe(df=data, file_path_str=filepath_str, create_dirs=True):
+            # logger.info(f"Saved processed data to {filepath_str} (via utility)")
+            pass # save_dataframe already logs success
         else:
-            # Default to parquet
-            filepath = f"{filepath}.parquet"
-            data.to_parquet(filepath)
-            
-        logger.info(f"Saved processed data to {filepath}")
+            logger.error(f"Failed to save processed data to {filepath_str} using utility.")
 
 
 class MarketReconstructionEngine:
@@ -754,24 +732,11 @@ class MarketReconstructionEngine:
             data: DataFrame to save
             filename: Name of the file
         """
-        filepath = os.path.join(self.data_dir, filename)
-        
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        # Determine file format based on extension
-        if filename.endswith('.csv'):
-            data.to_csv(filepath)
-        elif filename.endswith('.parquet'):
-            data.to_parquet(filepath)
-        elif filename.endswith('.pickle') or filename.endswith('.pkl'):
-            data.to_pickle(filepath)
+        filepath_str = os.path.join(self.data_dir, filename)
+        if save_dataframe(df=data, file_path_str=filepath_str, create_dirs=True):
+            pass # save_dataframe already logs success
         else:
-            # Default to parquet
-            filepath = f"{filepath}.parquet"
-            data.to_parquet(filepath)
-            
-        logger.info(f"Saved reconstructed data to {filepath}")
+            logger.error(f"Failed to save reconstructed data to {filepath_str} using utility.")
 
 
 # Additional utility functions for market data acquisition

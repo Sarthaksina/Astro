@@ -17,6 +17,11 @@ import argparse
 
 from pathlib import Path
 
+from src.utils.environment import check_python_version
+from src.utils.logger import get_logger # Added import
+
+logger = get_logger(__name__) # Added module-level logger
+
 def setup_environment():
     """Set up the environment for running optimization."""
     # Get the project root directory
@@ -48,18 +53,18 @@ def run_optimization(config_path):
         "--config", config_path
     ]
     
-    print("\n" + "="*80)
-    print("Running hyperparameter optimization and model training...")
-    print(f"Configuration file: {config_path}")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("Running hyperparameter optimization and model training...")
+    logger.info(f"Configuration file: {config_path}")
+    logger.info("="*80 + "\n")
     
     try:
         subprocess.run(cmd, check=True)
-        print("\nOptimization and training completed successfully!")
-        print("\nYou can view the results in the MLflow UI at: http://localhost:5000")
-        print("To start the MLflow UI, run: python scripts/setup_and_run_mlflow.py")
+        logger.info("\nOptimization and training completed successfully!")
+        logger.info("\nYou can view the results in the MLflow UI at: http://localhost:5000")
+        logger.info("To start the MLflow UI, run: python scripts/setup_and_run_mlflow.py")
     except subprocess.CalledProcessError as e:
-        print(f"\nError during optimization and training: {e}")
+        logger.error(f"\nError during optimization and training: {e}")
         sys.exit(1)
 
 def main():
@@ -73,21 +78,18 @@ def main():
     )
     args = parser.parse_args()
     
-    print("\n" + "="*80)
-    print("Cosmic Market Oracle - Optimization and Training")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("Cosmic Market Oracle - Optimization and Training")
+    logger.info("="*80 + "\n")
     
     # Check Python version
-    python_version = sys.version_info
-    print(f"Current Python version: {python_version.major}.{python_version.minor}.{python_version.micro}")
-    
-    if python_version.major != 3 or python_version.minor != 10:
-        print("WARNING: This project is optimized for Python 3.10.")
-        print(f"You are using Python {python_version.major}.{python_version.minor}")
-        
+    logger.info(f"Current Python version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+    if not check_python_version(3, 10): # Assuming 3.10 is required
+        # Input is fine, but error message should go to logger if exiting
         user_input = input("Continue anyway? (y/n): ").strip().lower()
         if user_input != 'y':
-            print("Exiting. Please use Python 3.10 for optimal compatibility.")
+            logger.error("Exiting. Please use Python 3.10 for optimal compatibility.")
+            print("Exiting. Please use Python 3.10 for optimal compatibility.") # Keep print for user
             sys.exit(1)
     
     # Run optimization

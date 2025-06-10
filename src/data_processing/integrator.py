@@ -13,10 +13,12 @@ import logging
 from datetime import datetime, timedelta
 
 from ..astro_engine.planetary_positions import PlanetaryCalculator
+from ..astro_engine.constants import get_planet_name
+from src.utils.logger import get_logger # Added import
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 
 def integrate_market_astro_data(
@@ -123,34 +125,4 @@ def calculate_planetary_data(dates: Union[List[datetime], np.ndarray, pd.Series]
     return df
 
 
-def get_planet_name(planet_id: int) -> str:
-    """
-    Get the name of a planet from its ID.
-    
-    Args:
-        planet_id: Swiss Ephemeris planet ID
-        
-    Returns:
-        Planet name as string
-    """
-    from ..astro_engine.planetary_positions import (
-        SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, 
-        URANUS, NEPTUNE, PLUTO, RAHU, KETU
-    )
-    
-    planet_names = {
-        SUN: "sun",
-        MOON: "moon",
-        MERCURY: "mercury",
-        VENUS: "venus",
-        MARS: "mars",
-        JUPITER: "jupiter",
-        SATURN: "saturn",
-        URANUS: "uranus",
-        NEPTUNE: "neptune",
-        PLUTO: "pluto",
-        RAHU: "rahu",
-        KETU: "ketu"
-    }
-    
-    return planet_names.get(planet_id, f"planet_{planet_id}")
+# Removed local get_planet_name function

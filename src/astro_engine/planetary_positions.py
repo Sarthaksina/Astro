@@ -22,7 +22,8 @@ from datetime import datetime, timedelta
 from .constants import (
     SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU,
     GEOCENTRIC, HELIOCENTRIC,
-    VIMSHOTTARI_PERIODS, VIMSHOTTARI_ORDER # Added imports
+    VIMSHOTTARI_PERIODS, VIMSHOTTARI_ORDER, # Preserving existing imports
+    NAKSHATRA_PROPERTIES # Added NAKSHATRA_PROPERTIES
 )
 
 
@@ -489,3 +490,48 @@ class PlanetaryCalculator:
             current_date = pratyantardasha["end_date"]
 
         return pratyantardashas
+
+    def get_nakshatra_details(self, longitude: float) -> Dict[str, Union[int, str, float, None]]:
+        """
+        Calculate detailed Nakshatra information for a given longitude.
+
+        Args:
+            longitude: Zodiacal longitude in degrees (0-360).
+
+        Returns:
+            Dictionary containing Nakshatra details:
+                - number: Nakshatra number (1-27)
+                - name: Name of the Nakshatra
+                - pada: Pada (quarter) of the Nakshatra (1-4)
+                - longitude_in_nakshatra: Degree within the Nakshatra (0-13.333...)
+                - degree_in_pada: Degree within the Pada (0-3.333...)
+                - financial_nature: Financial nature of the Nakshatra
+                - ruler: Ruling planet ID of the Nakshatra
+        """
+        if not (0 <= longitude < 360):
+            raise ValueError("Longitude must be between 0 and 359.99...")
+
+        nakshatra_span = 360 / 27  # Each nakshatra spans 13 degrees 20 minutes (13.333... degrees)
+        pada_span = nakshatra_span / 4  # Each pada spans 3 degrees 20 minutes (3.333... degrees)
+
+        nakshatra_number = int(longitude / nakshatra_span) + 1
+        longitude_in_nakshatra = longitude % nakshatra_span
+
+        pada_number = int(longitude_in_nakshatra / pada_span) + 1
+        # Ensure pada_number does not exceed 4, can happen due to float precision if longitude_in_nakshatra is exactly nakshatra_span
+        if pada_number > 4:
+            pada_number = 4
+
+        degree_in_pada = longitude_in_nakshatra % pada_span
+
+        properties = NAKSHATRA_PROPERTIES.get(nakshatra_number, {})
+
+        return {
+            "number": nakshatra_number,
+            "name": properties.get("name", "Unknown"),
+            "pada": pada_number,
+            "longitude_in_nakshatra": longitude_in_nakshatra,
+            "degree_in_pada": degree_in_pada,
+            "financial_nature": properties.get("financial_nature", "neutral"),
+            "ruler": properties.get("ruler")
+        }
