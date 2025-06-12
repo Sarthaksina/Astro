@@ -11,7 +11,8 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Tuple, Union, Optional
 import matplotlib.pyplot as plt
-import logging
+# import logging # Removed
+from ..utils.logger import get_logger # Changed path for src
 
 # Import specialized modules
 from src.statistical_modeling.core_correlation import (
@@ -32,8 +33,8 @@ from src.statistical_modeling.statistical_testing import (
 )
 
 # Configure logging
-from src.utils.logging_config import setup_logging
-logger = setup_logging(__name__)
+# from src.utils.logging_config import setup_logging # Removed
+logger = get_logger(__name__) # Changed
 
 class CyclicalCorrelationAnalyzer:
     """

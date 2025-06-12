@@ -53,13 +53,13 @@ from src.trading.signal_generator import (
 from src.trading.backtest import BacktestEngine, BacktestRunner
 from src.data_processing.market_data import MarketDataFetcher
 from src.astro_engine.planetary_positions import PlanetaryCalculator
-from src.astro_engine.vedic_analysis import VedicAnalyzer # Added
-from src.astro_engine.financial_yogas import FinancialYogaAnalyzer # Added
+from src.astro_engine.vedic_analysis import VedicAnalyzer
+from src.astro_engine.financial_yogas import FinancialYogaAnalyzer
 from src.feature_engineering.astrological_features import AstrologicalFeatureGenerator
-from src.utils.logger import setup_logger
+from src.utils.logger import get_logger # Changed
 
 # Configure logging
-logger = setup_logger("vedic_trading_example")
+logger = get_logger("vedic_trading_example") # Changed
 
 
 def load_market_data(symbol: str = "^DJI", start_date: str = "2018-01-01", 

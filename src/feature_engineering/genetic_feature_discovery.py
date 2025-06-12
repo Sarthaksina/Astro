@@ -12,19 +12,20 @@ from datetime import datetime, timedelta
 import random
 from enum import Enum
 import copy
-import logging
+# import logging # Removed
 from dataclasses import dataclass, field
+from src.utils.logger import get_logger # Added
 
 # Import from the centralized feature_definitions module
 from .feature_definitions import FeatureDefinition
 from .feature_generator import FeatureGenerator
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 
 @dataclass

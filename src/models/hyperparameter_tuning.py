@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 from src.utils.logger import setup_logger
 from src.models.model_factory import ModelFactory
 from src.utils.config import Config
+from .constants import DEFAULT_N_TRIALS, DEFAULT_TIMEOUT, DEFAULT_STUDY_NAME_PREFIX # Moved import
 
 # Configure logging
 logger = setup_logger("hyperparameter_tuning")
@@ -49,9 +50,9 @@ class OptunaHyperparameterTuner:
         data_loader: DataLoader,
         val_loader: DataLoader,
         test_loader: Optional[DataLoader] = None,
-        n_trials: int = 100,
-        timeout: Optional[int] = None,
-        study_name: str = "cosmic_market_oracle_optimization",
+        n_trials: int = DEFAULT_N_TRIALS,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        study_name: str = DEFAULT_STUDY_NAME_PREFIX + "_optimization",
         storage: Optional[str] = None,
         direction: Union[str, List[str]] = "maximize",
         pruner: Optional[optuna.pruners.BasePruner] = None,
@@ -586,11 +587,13 @@ def main():
     """Main function to run hyperparameter tuning."""
     import argparse
     
+    from .constants import DEFAULT_N_TRIALS, DEFAULT_TIMEOUT, DEFAULT_STUDY_NAME_PREFIX
+
     parser = argparse.ArgumentParser(description="Hyperparameter tuning for Cosmic Market Oracle")
     parser.add_argument("--config", type=str, required=True, help="Path to configuration file")
-    parser.add_argument("--n-trials", type=int, default=100, help="Number of optimization trials")
-    parser.add_argument("--timeout", type=int, default=None, help="Timeout in seconds")
-    parser.add_argument("--study-name", type=str, default="cosmic_market_oracle", help="Study name")
+    parser.add_argument("--n-trials", type=int, default=DEFAULT_N_TRIALS, help="Number of optimization trials")
+    parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="Timeout in seconds") # Changed from None
+    parser.add_argument("--study-name", type=str, default=DEFAULT_STUDY_NAME_PREFIX, help="Study name prefix") # Changed default
     parser.add_argument("--storage", type=str, default=None, help="Optuna storage URL")
     args = parser.parse_args()
     

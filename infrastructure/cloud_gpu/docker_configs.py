@@ -6,7 +6,8 @@ for different GPU workloads, optimized for various machine learning tasks.
 
 import os
 import yaml
-import logging
+# import logging # Removed
+from src.utils.logger import get_logger # Added
 from src.trading.unified_mcts import MCTS, MCTSPredictor
 from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
@@ -14,8 +15,8 @@ from typing import Dict, List, Optional, Union, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 class DockerConfigGenerator:
     """Generator for Docker configurations optimized for GPU workloads.

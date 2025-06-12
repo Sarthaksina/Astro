@@ -10,19 +10,20 @@ import sys
 import subprocess
 import threading
 import time
-import logging
+# import logging # Removed
 from pathlib import Path
+from src.utils.logger import get_logger # Added
 
 # Add project root to path
 project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 def start_websocket_server():
     """Start the WebSocket server in background."""
@@ -126,10 +127,9 @@ def run_streamlit_app():
 
 def main():
     """Main function to run the dashboard."""
-    print("=" * 60)
-    print("🌟 COSMIC MARKET ORACLE DASHBOARD 🌟")
-    print("=" * 60)
-    print()
+    logger.info("=" * 60)
+    logger.info("🌟 COSMIC MARKET ORACLE DASHBOARD 🌟")
+    logger.info("=" * 60)
     
     # Check dependencies
     logger.info("Checking dependencies...")
@@ -148,7 +148,7 @@ def main():
     # Give WebSocket server time to start
     time.sleep(2)
     
-    # Display startup information
+    # Display startup information (keeping print for user-facing startup messages)
     print("🚀 Starting Cosmic Market Oracle Dashboard...")
     print()
     print("📊 Features Available:")
@@ -187,7 +187,7 @@ def main():
         sys.exit(1)
     finally:
         logger.info("Cleaning up...")
-        print("\n🌟 Thank you for using Cosmic Market Oracle! 🌟")
+        print("\n🌟 Thank you for using Cosmic Market Oracle! 🌟") # Keep print for user
 
 if __name__ == "__main__":
     main()

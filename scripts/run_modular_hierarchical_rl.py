@@ -34,11 +34,11 @@ from src.trading.modular_hierarchical_rl import (
     PPOTacticalExecutor
 )
 from src.models.reinforcement import MarketEnvironment
-from src.utils.logger import setup_logger
+from src.utils.logger import get_logger # Changed
 from src.utils.visualization import plot_training_metrics, plot_episode_returns
 
 # Configure logging
-logger = setup_logger("run_modular_hierarchical_rl")
+logger = get_logger("run_modular_hierarchical_rl") # Changed
 
 
 def parse_args():

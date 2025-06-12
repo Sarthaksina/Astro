@@ -139,9 +139,16 @@ class AstrologicalKnowledgeBase:
     Knowledge base for astrological literature and concepts.
     """
     
+from .constants import (
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_KNOWLEDGE_BASE_PATH,
+    DEFAULT_CHUNK_SIZE, # Not used directly in __init__ but good to have for consistency if class uses it
+    DEFAULT_CHUNK_OVERLAP # Not used directly in __init__ but good to have
+)
+
     def __init__(self, 
-                 base_path: str = "data/knowledge_base",
-                 embedding_model: str = "all-MiniLM-L6-v2",
+                 base_path: str = DEFAULT_KNOWLEDGE_BASE_PATH,
+                 embedding_model: str = DEFAULT_EMBEDDING_MODEL,
                  index_name: str = "astro_index"):
         """
         Initialize the knowledge base.
@@ -227,8 +234,8 @@ class AstrologicalKnowledgeBase:
     def add_document(self, 
                      content: str, 
                      metadata: Dict[str, Any],
-                     chunk_size: int = 1000,
-                     overlap: int = 200) -> str:
+                     chunk_size: int = DEFAULT_CHUNK_SIZE,
+                     overlap: int = DEFAULT_CHUNK_OVERLAP) -> str:
         """
         Add a document to the knowledge base.
         

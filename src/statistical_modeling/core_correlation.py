@@ -10,15 +10,16 @@ import pandas as pd
 from typing import Dict, List, Tuple, Union, Optional
 from scipy import signal, stats
 import matplotlib.pyplot as plt
-import logging
+# import logging # Removed
+from ..utils.logger import get_logger # Changed path for src
 from statsmodels.tsa.stattools import ccf
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 
 def cross_correlation(x: np.ndarray, y: np.ndarray, max_lag: int = None) -> Tuple[np.ndarray, np.ndarray]:

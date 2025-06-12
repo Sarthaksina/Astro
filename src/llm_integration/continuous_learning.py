@@ -30,11 +30,13 @@ class ContinuousLearningPipeline:
     Pipeline for continuously updating LLM knowledge.
     """
     
+    from .constants import DEFAULT_UPDATE_INTERVAL, DEFAULT_CL_OUTPUT_DIR
+
     def __init__(self, 
                  knowledge_base: AstrologicalKnowledgeBase,
                  data_sources: Dict[str, Dict[str, Any]],
-                 update_interval: int = 24,  # hours
-                 output_dir: str = "data/updates"):
+                 update_interval: int = DEFAULT_UPDATE_INTERVAL,  # hours
+                 output_dir: str = DEFAULT_CL_OUTPUT_DIR):
         """
         Initialize the continuous learning pipeline.
         

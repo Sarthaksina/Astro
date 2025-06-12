@@ -21,6 +21,8 @@ from src.astro_engine.planetary_positions import PlanetaryCalculator
 from src.trading.signal_generator import CombinedSignalGenerator
 from src.utils.logger import setup_logger
 
+from .constants import MAX_PORTFOLIO_WEIGHT, MIN_PORTFOLIO_WEIGHT, RISK_FREE_RATE
+
 # Configure logging
 logger = setup_logger("portfolio_construction")
 
@@ -84,8 +86,8 @@ class MPTPortfolioConstructor(PortfolioConstructor):
     
     def __init__(self, name: str = "MPT Portfolio Constructor", 
                 risk_aversion: float = 2.0, 
-                min_weight: float = 0.0, 
-                max_weight: float = 0.3):
+                min_weight: float = MIN_PORTFOLIO_WEIGHT,
+                max_weight: float = MAX_PORTFOLIO_WEIGHT):
         """
         Initialize the MPT portfolio constructor.
         
@@ -185,7 +187,7 @@ class MPTPortfolioConstructor(PortfolioConstructor):
         def objective(weights):
             portfolio_return = np.sum(expected_returns * weights)
             portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-            return -(portfolio_return - 0.02) / portfolio_volatility  # Assuming risk-free rate of 2%
+            return -(portfolio_return - RISK_FREE_RATE) / portfolio_volatility
         
         # Define constraints
         constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]  # Weights sum to 1

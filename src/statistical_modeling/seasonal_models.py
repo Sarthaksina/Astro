@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Tuple, Union, Optional, Callable
 import matplotlib.pyplot as plt
-import logging
+# import logging # Removed
+from ..utils.logger import get_logger # Changed path for src
 import pymc as pm
 import arviz as az
 import theano.tensor as tt
@@ -19,11 +20,11 @@ from scipy import stats
 from src.statistical_modeling.time_series_bayesian import TimeSeriesModel
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 
 class SeasonalModel(TimeSeriesModel):

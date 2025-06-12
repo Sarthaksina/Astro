@@ -22,17 +22,15 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 # Import ThunderCompute manager
 from infrastructure.cloud_gpu.thunder_compute_manager import get_thunder_compute_manager
+from src.utils.logger import get_logger # Added
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("logs/thunder_shutdown_idle.log"),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(...) # Removed
+logger = get_logger(__name__) # Changed
+# Note: FileHandler("logs/thunder_shutdown_idle.log") specific to this script's old basicConfig
+# would need to be re-implemented via get_logger's capabilities or by adding a file handler
+# to the logger instance if that specific log file is still required.
+# For this task, I'll assume the default get_logger behavior is sufficient.
 
 # Default configuration
 DEFAULT_CONFIG_PATH = Path("config/gpu_instances.yaml")

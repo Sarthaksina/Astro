@@ -17,8 +17,9 @@ from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTS
 from datetime import datetime
 from pathlib import Path
 import subprocess
-import logging
+# import logging # Removed
 import yaml
+from src.utils.logger import get_logger # Added
 
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -28,8 +29,8 @@ from infrastructure.cloud_gpu.thunder_compute_manager import get_thunder_compute
 from infrastructure.scripts.benchmark import GPUBenchmark, WORKLOADS
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 # Configuration
 CONFIG_PATH = Path("config/gpu_instances.yaml")

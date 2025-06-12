@@ -24,13 +24,14 @@ sys.path.append(str(project_root))
 
 from src.astro_engine.planetary_positions import PlanetaryCalculator
 from src.trading.strategy_framework import VedicAstrologyStrategy
+from .constants import DEFAULT_HOST, DEFAULT_PORT # MAX_CONNECTIONS is not used here
 
 logger = get_logger(__name__) # Changed
 
 class WebSocketServer:
     """WebSocket server for real-time dashboard communication."""
     
-    def __init__(self, host: str = "localhost", port: int = 8765):
+    def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
         """
         Initialize WebSocket server.
         
@@ -435,10 +436,12 @@ class WebSocketServer:
 # Server runner script
 if __name__ == "__main__":
     import argparse
-    
+    # Import constants for main block defaults
+    from .constants import DEFAULT_HOST, DEFAULT_PORT
+
     parser = argparse.ArgumentParser(description="Cosmic Market Oracle WebSocket Server")
-    parser.add_argument("--host", default="localhost", help="Server host")
-    parser.add_argument("--port", type=int, default=8765, help="Server port")
+    parser.add_argument("--host", default=DEFAULT_HOST, help="Server host")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server port")
     parser.add_argument("--log-level", default="INFO", help="Log level")
     
     args = parser.parse_args()

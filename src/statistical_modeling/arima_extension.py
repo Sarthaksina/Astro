@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Tuple, Union, Optional, Callable
 import matplotlib.pyplot as plt
-import logging
+# import logging # Removed
+from src.utils.logger import get_logger # Added
 import pymc as pm
 import arviz as az
 import theano.tensor as tt
@@ -19,11 +20,11 @@ from src.statistical_modeling.time_series_bayesian import TimeSeriesModel
 from src.statistical_modeling.arima_models import ARMAModel
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 
 class ARIMAModel(ARMAModel):

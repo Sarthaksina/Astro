@@ -31,10 +31,12 @@ class ReportGenerator:
     Generator for astrological market analysis reports.
     """
     
+    from .constants import DEFAULT_REPORT_DIR
+
     def __init__(self, 
                  llm_provider: LLMProvider,
                  output_formatter: OutputFormatter,
-                 output_dir: str = "reports"):
+                 output_dir: str = DEFAULT_REPORT_DIR):
         """
         Initialize the report generator.
         

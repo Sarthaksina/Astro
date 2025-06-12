@@ -32,12 +32,12 @@ project_root = Path(__file__).resolve().parent
 sys.path.append(str(project_root))
 
 # Import project modules
-from src.utils.logger import setup_logger
+from src.utils.logger import get_logger # Changed
 from src.utils.config import Config
 from src.pipeline.prediction_pipeline import PredictionPipeline
 
 # Configure logging
-logger = setup_logger("cosmic_oracle")
+logger = get_logger("cosmic_oracle") # Changed
 
 def setup_environment():
     """Set up the environment for running the Cosmic Market Oracle."""

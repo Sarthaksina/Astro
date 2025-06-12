@@ -23,6 +23,7 @@ from joblib import Parallel, delayed
 from src.trading.strategy_framework import BaseStrategy, VedicAstrologyStrategy
 from src.trading.backtest import BacktestEngine
 from src.utils.logger import setup_logger
+from .constants import DEFAULT_OPTIMIZATION_METRIC # Moved import
 
 # Configure logging
 logger = setup_logger("strategy_optimization")
@@ -51,7 +52,7 @@ class StrategyOptimizer:
         self.best_metrics = {}
     
     def optimize(self, strategy_class, param_space: Dict, 
-                objective: str = "sharpe_ratio", n_trials: int = 100,
+                objective: str = DEFAULT_OPTIMIZATION_METRIC, n_trials: int = 100,
                 timeout: int = None) -> Dict:
         """
         Optimize strategy parameters.

@@ -8,9 +8,10 @@ and training configurations.
 
 import argparse
 import json
-import logging
+# import logging # Removed
 import os
 import time
+from src.utils.logger import get_logger # Added
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any, Tuple
@@ -33,9 +34,11 @@ from src.feature_engineering.feature_generator import generate_features
 
 from src.utils.config import Config # Added import
 
+from src.utils.config import Config # Added import
+
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 
 class ModelTrainer:

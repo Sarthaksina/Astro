@@ -26,7 +26,9 @@ class MarketSimulator:
     calculation for backtesting purposes.
     """
     
-    def __init__(self, initial_capital: float = 100000.0, commission: float = 0.001):
+    from .constants import DEFAULT_INITIAL_CAPITAL, DEFAULT_COMMISSION_RATE
+
+    def __init__(self, initial_capital: float = DEFAULT_INITIAL_CAPITAL, commission: float = DEFAULT_COMMISSION_RATE):
         """
         Initialize the market simulator.
         
