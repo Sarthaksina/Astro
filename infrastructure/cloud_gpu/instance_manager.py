@@ -8,9 +8,10 @@ monitoring, and cost optimization.
 import os
 import json
 import time
-import logging
+# import logging # Removed
 import yaml
 import argparse
+from src.utils.logger import get_logger # Added
 from src.trading.unified_mcts import MCTS, MCTSPredictor
 from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
@@ -24,8 +25,8 @@ from infrastructure.cloud_gpu.vast_ai_manager import get_vast_ai_manager
 from infrastructure.cloud_gpu.thunder_compute_manager import get_thunder_compute_manager
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 class CloudGPUManager:
     """Unified manager for cloud GPU instances across providers.

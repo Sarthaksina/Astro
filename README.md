@@ -91,6 +91,11 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 │   ├── feature_engineering/         # Feature creation from raw data
 │   ├── models/                      # ML/DL model implementations
 │   ├── api/                         # FastAPI implementation
+│   ├── utils/                       # Core utilities
+│   │   ├── config.py                # Configuration management
+│   │   ├── logger.py                # Centralized logging
+│   │   ├── file_io.py               # DataFrame saving utility
+│   │   └── environment.py           # Environment checks (e.g., Python version)
 │   └── visualization/               # Data visualization tools
 │
 ├── tests/                           # Unit and integration tests
@@ -106,7 +111,7 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 ## Core Components
 
 1. **Vedic Astrological Engine**: Comprehensive calculation modules for planetary positions, nakshatras, and dashas
-2. **Data Acquisition System**: Collection of historical market data and astrological ephemeris
+2. **Data Acquisition & Integration**: Modules for collecting market/astrological data and a unified system (`src/data_integration/db_manager.py`) for database schema and operations.
 3. **Feature Engineering**: Conversion of astrological phenomena into ML-compatible inputs
 4. **Model Development**: Implementation of ensemble models combining multiple AI paradigms
 5. **Evaluation Framework**: Comprehensive testing across different market regimes
@@ -114,6 +119,7 @@ This pioneering project fuses historical Dow Jones Industrial Average (DJI) data
 7. **API Server**: FastAPI-based interface for accessing predictions and data
 8. **Cloud GPU Management**: Automated infrastructure for cost-efficient model training
 9. **Modular Hierarchical RL Framework**: Flexible architecture for strategic planning and tactical execution in trading
+10. **Core Utilities**: Centralized modules for logging, configuration, file I/O, and environment checks (`src/utils/`).
 
 ## Modular Hierarchical RL Framework
 

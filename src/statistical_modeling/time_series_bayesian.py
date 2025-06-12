@@ -16,13 +16,14 @@ import theano.tensor as tt
 from scipy import stats
 
 from src.statistical_modeling.bayesian_core import BayesianModel
+from src.utils.logger import get_logger # Added
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 
 class TimeSeriesModel(BayesianModel):

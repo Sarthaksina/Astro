@@ -9,8 +9,9 @@ relationships between market conditions and astrological configurations.
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Optional, Union, Tuple
-import logging
+# import logging # Removed
 from datetime import datetime, timedelta
+from src.utils.logger import get_logger # Added
 
 from .astrological_features import AstrologicalFeatureGenerator
 from .market_features import MarketFeatureGenerator
@@ -18,8 +19,8 @@ from ..astro_engine.planetary_positions import PlanetaryCalculator
 from ..astro_engine.constants import get_planet_name, SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 
 class FeatureGenerator:

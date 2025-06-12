@@ -7,22 +7,17 @@ It shows how to set up the database, insert data, create optimized views, and pe
 between market data and planetary positions.
 """
 
-import logging
-from src.trading.unified_mcts import MCTS, MCTSPredictor
-from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
-from datetime import datetime, timedelta
-
 import pandas as pd
 import numpy as np
+from datetime import datetime, timedelta
 
+# from src.trading.unified_mcts import MCTS, MCTSPredictor # Not used in this script
+# from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor # Not used
 from src.utils.db.timescale_connector import get_timescale_connector
+from src.utils.logger import get_logger
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger("timescale_example")
+logger = get_logger("timescale_example")
 
 
 def generate_sample_market_data(days=30, symbol="DJI"):

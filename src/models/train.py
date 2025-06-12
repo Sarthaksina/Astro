@@ -8,9 +8,10 @@ and training configurations.
 
 import argparse
 import json
-import logging
+# import logging # Removed
 import os
 import time
+from src.utils.logger import get_logger # Added
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any, Tuple
@@ -31,120 +32,63 @@ from src.models.model_factory import create_model_from_config, get_optimizer, ge
 from src.data_processing.integrator import integrate_market_astro_data
 from src.feature_engineering.feature_generator import generate_features
 
+from src.utils.config import Config # Added import
+
+from src.utils.config import Config # Added import
+
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 
 class ModelTrainer:
     """Handles the training of market prediction models."""
     
-    def __init__(self, config_path: Optional[Union[str, Path]] = None):
+    def __init__(self, config_path: Optional[Union[str, Path]] = None, config: Optional[Config] = None):
         """
         Initialize the model trainer with configuration.
         
         Args:
-            config_path: Path to the model configuration JSON file
+            config_path: Path to the model configuration JSON/YAML file.
+            config: An existing Config object.
         """
-        self.config = self._load_config(config_path)
-        self.device = torch.device(self.config.get('device', 'cuda' if torch.cuda.is_available() else 'cpu'))
+        if config:
+            self.config = config
+        elif config_path:
+            self.config = Config(config_path)
+        else:
+            # Fallback to a default config path or raise an error
+            default_config_path = Path("config/model_config.yaml") # Or relevant default
+            if default_config_path.exists():
+                logger.info(f"No config provided, loading from default: {default_config_path}")
+                self.config = Config(default_config_path)
+            else:
+                logger.warning("No configuration provided and default config path not found. Using empty config.")
+                self.config = Config(None) # Creates an empty config
+                # Or, initialize with hardcoded defaults if essential:
+                # self.config.config = self._get_default_trainer_config()
+
+        self.device = torch.device(self.config.get('training.device', 'cuda' if torch.cuda.is_available() else 'cpu'))
         
         # Set up MLflow tracking
-        mlflow_tracking_uri = self.config.get('mlflow', {}).get('tracking_uri', 'mlruns')
+        mlflow_tracking_uri = self.config.get('mlflow.tracking_uri', 'mlruns')
         mlflow.set_tracking_uri(mlflow_tracking_uri)
-        self.experiment_name = self.config.get('mlflow', {}).get('experiment_name', 'cosmic_market_oracle')
+        self.experiment_name = self.config.get('mlflow.experiment_name', 'cosmic_market_oracle')
         mlflow.set_experiment(self.experiment_name)
         
         # Create output directories
-        self.output_dir = Path(self.config.get('output_dir', 'models'))
+        self.output_dir = Path(self.config.get('training.output_dir', 'models'))
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         logger.info(f"Initialized ModelTrainer with device: {self.device}")
-    
-    def _load_config(self, config_path: Optional[Union[str, Path]] = None) -> Dict:
-        """
-        Load model configuration from file or use defaults.
-        
-        Args:
-            config_path: Path to configuration file
-            
-        Returns:
-            Configuration dictionary
-        """
-        default_config = {
-            'model_type': 'lstm',
-            'data': {
-                'start_date': '1900-01-01',
-                'end_date': '2023-01-01',
-                'symbol': '^DJI',
-                'train_ratio': 0.7,
-                'val_ratio': 0.15,
-                'test_ratio': 0.15,
-                'sequence_length': 60,
-                'target_horizon': 20,
-                'features': 'all'
-            },
-            'training': {
-                'batch_size': 64,
-                'epochs': 100,
-                'early_stopping_patience': 10,
-                'learning_rate': 0.001,
-                'weight_decay': 0.0001
-            },
-            'lstm_config': {
-                'input_dim': 64,
-                'hidden_dim': 128,
-                'num_layers': 2,
-                'output_dim': 1,
-                'dropout': 0.2
-            },
-            'optimizer_config': {
-                'type': 'adam',
-                'learning_rate': 0.001,
-                'weight_decay': 0.0001
-            },
-            'scheduler_config': {
-                'type': 'plateau',
-                'patience': 5,
-                'factor': 0.5
-            },
-            'mlflow': {
-                'tracking_uri': 'mlruns',
-                'experiment_name': 'cosmic_market_oracle',
-                'log_artifacts': True
-            }
-        }
-        
-        if config_path:
-            config_path = Path(config_path)
-            if config_path.exists():
-                try:
-                    with open(config_path, 'r') as f:
-                        user_config = json.load(f)
-                    
-                    # Update default config with user config
-                    self._deep_update(default_config, user_config)
-                    logger.info(f"Loaded configuration from {config_path}")
-                except Exception as e:
-                    logger.error(f"Error loading config from {config_path}: {str(e)}")
-                    logger.warning("Using default configuration")
-        
-        return default_config
-    
-    def _deep_update(self, base_dict: Dict, update_dict: Dict) -> None:
-        """
-        Deep update a nested dictionary with another dictionary.
-        
-        Args:
-            base_dict: Base dictionary to update
-            update_dict: Dictionary with values to update in base_dict
-        """
-        for key, value in update_dict.items():
-            if key in base_dict and isinstance(base_dict[key], dict) and isinstance(value, dict):
-                self._deep_update(base_dict[key], value)
-            else:
-                base_dict[key] = value
-    
+
+    # _load_config and _deep_update are removed as their functionality is
+    # handled by src.utils.config.Config and standard dict operations or by ensuring
+    # that the main config file contains all necessary defaults.
+    # If specific defaults for ModelTrainer are still needed when no config is found,
+    # they can be hardcoded or loaded from a default dict here.
+    # For example, a _get_default_trainer_config method could be used in __init__.
+
     def prepare_data(self) -> Tuple[DataLoader, DataLoader, DataLoader]:
         """
         Prepare data for model training, validation, and testing.
@@ -152,12 +96,10 @@ class ModelTrainer:
         Returns:
             Tuple of (train_loader, val_loader, test_loader)
         """
-        data_config = self.config.get('data', {})
-        
-        # Load and integrate market and astrological data
-        start_date = data_config.get('start_date', '1900-01-01')
-        end_date = data_config.get('end_date', '2023-01-01')
-        symbol = data_config.get('symbol', '^DJI')
+        # Access nested keys using dot notation with Config.get
+        start_date = self.config.get('data.start_date', '1900-01-01')
+        end_date = self.config.get('data.end_date', '2023-01-01')
+        symbol = self.config.get('data.symbol', '^DJI')
         
         logger.info(f"Loading data for {symbol} from {start_date} to {end_date}")
         
@@ -175,16 +117,16 @@ class ModelTrainer:
         features_df = generate_features(integrated_data)
         
         # Prepare sequences
-        sequence_length = data_config.get('sequence_length', 60)
-        target_horizon = data_config.get('target_horizon', 20)
+        sequence_length = self.config.get('data.sequence_length', 60)
+        target_horizon = self.config.get('data.target_horizon', 20)
         
         # Create sequences and targets
         sequences, targets = self._create_sequences(features_df, sequence_length, target_horizon)
         
         # Split data
-        train_ratio = data_config.get('train_ratio', 0.7)
-        val_ratio = data_config.get('val_ratio', 0.15)
-        test_ratio = data_config.get('test_ratio', 0.15)
+        train_ratio = self.config.get('data.train_ratio', 0.7)
+        val_ratio = self.config.get('data.val_ratio', 0.15)
+        # test_ratio is implicitly defined by train_ratio and val_ratio
         
         # Calculate split indices
         n_samples = len(sequences)
@@ -228,7 +170,7 @@ class ModelTrainer:
         )
         
         # Create dataloaders
-        batch_size = self.config.get('training', {}).get('batch_size', 64)
+        batch_size = self.config.get('training.batch_size', 64)
         
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size)
@@ -312,8 +254,8 @@ class ModelTrainer:
         criterion = nn.MSELoss()
         
         # Training parameters
-        epochs = self.config.get('training', {}).get('epochs', 100)
-        early_stopping_patience = self.config.get('training', {}).get('early_stopping_patience', 10)
+        epochs = self.config.get('training.epochs', 100)
+        early_stopping_patience = self.config.get('training.early_stopping_patience', 10)
         
         # Initialize tracking variables
         best_val_loss = float('inf')
@@ -323,12 +265,13 @@ class ModelTrainer:
         # Start MLflow run
         with mlflow.start_run(run_name=f"{self.config['model_type']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
             # Log parameters
+            # Ensure all accessed keys exist or have defaults in self.config.get()
             mlflow.log_params({
-                'model_type': self.config['model_type'],
-                'sequence_length': self.config['data']['sequence_length'],
-                'target_horizon': self.config['data']['target_horizon'],
-                'batch_size': self.config['training']['batch_size'],
-                'learning_rate': self.config['optimizer_config']['learning_rate'],
+                'model_type': self.config.get('model_type', 'unknown'),
+                'sequence_length': self.config.get('data.sequence_length', 60),
+                'target_horizon': self.config.get('data.target_horizon', 20),
+                'batch_size': self.config.get('training.batch_size', 64),
+                'learning_rate': self.config.get('optimizer_config.learning_rate', 0.001),
                 'epochs': epochs
             })
             

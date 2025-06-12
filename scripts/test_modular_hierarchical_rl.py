@@ -34,10 +34,10 @@ from src.trading.modular_hierarchical_rl import (
     PPOTacticalExecutor
 )
 from src.models.reinforcement import MarketEnvironment
-from src.utils.logger import setup_logger
+from src.utils.logger import get_logger # Changed
 
 # Configure logging
-logger = setup_logger("test_modular_hierarchical_rl")
+logger = get_logger("test_modular_hierarchical_rl") # Changed
 
 
 def test_agent_creation():

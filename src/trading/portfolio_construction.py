@@ -20,6 +20,13 @@ import scipy.optimize as sco
 from src.astro_engine.planetary_positions import PlanetaryCalculator
 from src.trading.signal_generator import CombinedSignalGenerator
 from src.utils.logger import setup_logger
+# Import new constants for sector rotation
+from ..astro_engine.constants import (
+    PLANET_SECTOR_AFFINITIES, SIGN_SECTOR_AFFINITIES, ZODIAC_SIGN_NAMES,
+    SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU
+)
+
+from .constants import MAX_PORTFOLIO_WEIGHT, MIN_PORTFOLIO_WEIGHT, RISK_FREE_RATE
 
 # Configure logging
 logger = setup_logger("portfolio_construction")
@@ -84,8 +91,8 @@ class MPTPortfolioConstructor(PortfolioConstructor):
     
     def __init__(self, name: str = "MPT Portfolio Constructor", 
                 risk_aversion: float = 2.0, 
-                min_weight: float = 0.0, 
-                max_weight: float = 0.3):
+                min_weight: float = MIN_PORTFOLIO_WEIGHT,
+                max_weight: float = MAX_PORTFOLIO_WEIGHT):
         """
         Initialize the MPT portfolio constructor.
         
@@ -185,7 +192,7 @@ class MPTPortfolioConstructor(PortfolioConstructor):
         def objective(weights):
             portfolio_return = np.sum(expected_returns * weights)
             portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-            return -(portfolio_return - 0.02) / portfolio_volatility  # Assuming risk-free rate of 2%
+            return -(portfolio_return - RISK_FREE_RATE) / portfolio_volatility
         
         # Define constraints
         constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]  # Weights sum to 1
@@ -217,36 +224,10 @@ class AstrologicalSectorRotation(PortfolioConstructor):
         """Initialize the astrological sector rotation constructor."""
         super().__init__(name)
         
-        # Define sector affinities for planets
-        self.planet_sector_affinities = {
-            "Sun": ["Technology", "Energy", "Gold"],
-            "Moon": ["Real Estate", "Consumer Staples", "Utilities"],
-            "Mercury": ["Technology", "Communication", "Financial Services"],
-            "Venus": ["Luxury Goods", "Entertainment", "Financial Services"],
-            "Mars": ["Energy", "Industrial", "Defense"],
-            "Jupiter": ["Financial Services", "Education", "International"],
-            "Saturn": ["Real Estate", "Utilities", "Basic Materials"],
-            "Rahu": ["Technology", "Pharmaceuticals", "Speculative"],
-            "Ketu": ["Pharmaceuticals", "Alternative Energy", "Precious Metals"]
-        }
+        # self.planet_sector_affinities and self.zodiac_sector_affinities are now removed.
+        # They will be imported from astro_engine.constants.
         
-        # Define zodiac sign sector affinities
-        self.zodiac_sector_affinities = {
-            "Aries": ["Energy", "Defense", "Sports"],
-            "Taurus": ["Banking", "Real Estate", "Luxury Goods"],
-            "Gemini": ["Media", "Technology", "Transportation"],
-            "Cancer": ["Food", "Real Estate", "Shipping"],
-            "Leo": ["Entertainment", "Gold", "Luxury Goods"],
-            "Virgo": ["Healthcare", "Food Processing", "Utilities"],
-            "Libra": ["Luxury Goods", "Art", "Legal Services"],
-            "Scorpio": ["Financial Services", "Research", "Defense"],
-            "Sagittarius": ["Travel", "Education", "International"],
-            "Capricorn": ["Infrastructure", "Energy", "Government"],
-            "Aquarius": ["Technology", "Aerospace", "Alternative Energy"],
-            "Pisces": ["Pharmaceuticals", "Entertainment", "Oil & Gas"]
-        }
-        
-        # Map sectors to ETFs or stocks (example mapping)
+        # Map sectors to ETFs or stocks (example mapping) - this remains local as it's UI/config specific
         self.sector_tickers = {
             "Technology": ["XLK", "QQQ", "MSFT", "AAPL"],
             "Energy": ["XLE", "CVX", "XOM"],
@@ -290,7 +271,7 @@ class AstrologicalSectorRotation(PortfolioConstructor):
             date = datetime.now()
         
         # Get planetary positions
-        positions = self.calculator.calculate_planet_positions(date)
+        positions = self.calculator.calculate_positions(date) # Corrected method name
         
         # Determine favored sectors based on planetary positions
         favored_sectors = self._determine_favored_sectors(positions)
@@ -341,40 +322,41 @@ class AstrologicalSectorRotation(PortfolioConstructor):
         """
         favored_sectors = {}
         
-        # Check each planet's position and influence
-        for planet, position in positions.items():
-            if planet in self.planet_sector_affinities:
-                # Get zodiac sign
-                longitude = position["longitude"]
-                sign_num = int(longitude / 30) + 1
-                signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
-                        "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
-                sign = signs[sign_num - 1]
+        # The `positions` dict from `self.calculator.calculate_positions(date)`
+        # should have integer planet IDs as keys.
+        for planet_id, position_details in positions.items():
+            # Skip non-integer keys if any (e.g., 'date' if it's part of the dict)
+            if not isinstance(planet_id, int):
+                continue
+
+            # Use .get for safer access, providing an empty list if key not found
+            planet_affinities = PLANET_SECTOR_AFFINITIES.get(planet_id, [])
+            if planet_affinities: # Check if the planet has defined affinities
+                longitude = position_details["longitude"]
+                # sign_idx will be 0 for Aries, 1 for Taurus, etc.
+                sign_idx = int(longitude / 30)
                 
-                # Get planet strength (simplified)
                 strength = 1.0
-                if "dignity" in position:
-                    dignity = position["dignity"]
+                if "dignity" in position_details: # Ensure 'dignity' key exists
+                    dignity = position_details["dignity"]
                     if dignity == "exalted":
                         strength = 1.5
                     elif dignity == "debilitated":
                         strength = 0.5
                 
                 # Add planet's favored sectors
-                for sector in self.planet_sector_affinities[planet]:
-                    if sector not in favored_sectors:
-                        favored_sectors[sector] = 0
-                    favored_sectors[sector] += strength
+                for sector in planet_affinities:
+                    favored_sectors[sector] = favored_sectors.get(sector, 0) + strength
                 
                 # Add sign's favored sectors
-                if sign in self.zodiac_sector_affinities:
-                    for sector in self.zodiac_sector_affinities[sign]:
-                        if sector not in favored_sectors:
-                            favored_sectors[sector] = 0
-                        favored_sectors[sector] += strength * 0.5  # Sign influence is half of planet's
+                # SIGN_SECTOR_AFFINITIES uses 0-11 index for Aries-Pisces
+                sign_affinities = SIGN_SECTOR_AFFINITIES.get(sign_idx, [])
+                if sign_affinities: # Check if the sign has defined affinities
+                    for sector in sign_affinities:
+                        favored_sectors[sector] = favored_sectors.get(sector, 0) + strength * 0.5  # Sign influence is half
         
         # Sort sectors by strength
-        sorted_sectors = sorted(favored_sectors.keys(), key=lambda x: favored_sectors[x], reverse=True)
+        sorted_sectors = sorted(favored_sectors.keys(), key=favored_sectors.get, reverse=True)
         
         return sorted_sectors
     

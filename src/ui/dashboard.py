@@ -15,9 +15,10 @@ from datetime import datetime, timedelta
 import asyncio
 import json
 from typing import Dict, List, Optional, Any
-import logging
+# import logging # Removed
 from pathlib import Path
 import sys
+from src.utils.logger import get_logger # Added
 import os
 
 # Add project root to path
@@ -36,8 +37,8 @@ from src.evaluation.visualization import PerformanceVisualizer
 from src.llm_integration.conversation import ConversationalInterface
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO) # Removed
+logger = get_logger(__name__) # Changed
 
 # Page configuration
 st.set_page_config(

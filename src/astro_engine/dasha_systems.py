@@ -17,8 +17,11 @@ from typing import Dict, List, Optional, Union, Tuple
 import math
 
 from datetime import datetime, timedelta
-from .planetary_positions import (
-    PlanetaryCalculator, SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU
+from .planetary_positions import PlanetaryCalculator
+from .constants import (
+    SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU, # Planet IDs
+    get_planet_name, # Function
+    PLANET_FINANCIAL_SIGNIFICANCE # New Constant
 )
 
 
@@ -33,24 +36,13 @@ class DashaCalculator:
             calculator: Optional PlanetaryCalculator instance
         """
         self.calculator = calculator or PlanetaryCalculator()
+        self.financial_significance = PLANET_FINANCIAL_SIGNIFICANCE # Use centralized constant
         
-        # Vimshottari Dasha periods (years)
-        self.vimshottari_periods = {
-            KETU: 7,
-            VENUS: 20,
-            SUN: 6,
-            MOON: 10,
-            MARS: 7,
-            RAHU: 18,
-            JUPITER: 16,
-            SATURN: 19,
-            MERCURY: 17
-        }
+        # Vimshottari Dasha periods (years) - MOVED to constants.py
+        # self.vimshottari_periods = { ... }
         
-        # Vimshottari Dasha order
-        self.vimshottari_order = [
-            KETU, VENUS, SUN, MOON, MARS, RAHU, JUPITER, SATURN, MERCURY
-        ]
+        # Vimshottari Dasha order - MOVED to constants.py
+        # self.vimshottari_order = [ ... ]
         
         # Yogini Dasha periods (years)
         self.yogini_periods = {
@@ -75,231 +67,10 @@ class DashaCalculator:
             7: MOON,
             8: RAHU
         }
-        
-        # Financial significance of planets
-        self.financial_significance = {
-            SUN: {
-                "trend": "neutral",
-                "volatility": "moderate",
-                "sectors": ["government", "gold", "energy", "leadership"],
-                "description": "Represents authority, government policy, and leadership"
-            },
-            MOON: {
-                "trend": "variable",
-                "volatility": "high",
-                "sectors": ["public sentiment", "real estate", "food", "retail"],
-                "description": "Represents public sentiment, liquidity, and consumer behavior"
-            },
-            MERCURY: {
-                "trend": "neutral",
-                "volatility": "high",
-                "sectors": ["communication", "technology", "media", "trade"],
-                "description": "Represents communication, technology, and trading activity"
-            },
-            VENUS: {
-                "trend": "bullish",
-                "volatility": "low",
-                "sectors": ["luxury", "entertainment", "fashion", "art"],
-                "description": "Represents luxury goods, entertainment, and growth sectors"
-            },
-            MARS: {
-                "trend": "bearish",
-                "volatility": "very high",
-                "sectors": ["military", "construction", "sports", "manufacturing"],
-                "description": "Represents aggressive action, competition, and conflict"
-            },
-            JUPITER: {
-                "trend": "bullish",
-                "volatility": "low",
-                "sectors": ["finance", "education", "legal", "religion"],
-                "description": "Represents expansion, optimism, and growth"
-            },
-            SATURN: {
-                "trend": "bearish",
-                "volatility": "low",
-                "sectors": ["infrastructure", "mining", "agriculture", "old industries"],
-                "description": "Represents contraction, discipline, and long-term trends"
-            },
-            RAHU: {
-                "trend": "variable",
-                "volatility": "extreme",
-                "sectors": ["foreign markets", "innovation", "speculation", "new technologies"],
-                "description": "Represents speculation, innovation, and sudden growth"
-            },
-            KETU: {
-                "trend": "bearish",
-                "volatility": "extreme",
-                "sectors": ["spiritual", "pharmaceuticals", "hidden sectors", "dissolution"],
-                "description": "Represents dissolution, spiritual values, and hidden factors"
-            }
-        }
+        # Financial significance of planets - REMOVED, now uses imported PLANET_FINANCIAL_SIGNIFICANCE
     
-    def calculate_vimshottari_dasha(self, birth_moon_longitude: float, birth_date: Union[str, datetime]) -> Dict:
-        """
-        Calculate Vimshottari dasha periods from birth date and Moon position.
-        
-        Args:
-            birth_moon_longitude: Longitude of Moon at birth
-            birth_date: Birth date as datetime or ISO string
-            
-        Returns:
-            Dictionary with dasha periods and their dates
-        """
-        # Convert birth_date to datetime if it's a string
-        if isinstance(birth_date, str):
-            birth_date = datetime.fromisoformat(birth_date)
-            
-        # Calculate birth nakshatra and progression
-        nakshatra = int(birth_moon_longitude / (360 / 27))
-        progression = (birth_moon_longitude % (360 / 27)) / (360 / 27)
-        
-        # Determine starting dasha lord based on nakshatra
-        nakshatra_lords = [
-            KETU, VENUS, SUN, MOON, MARS, RAHU, JUPITER, SATURN, MERCURY,  # 1-9
-            KETU, VENUS, SUN, MOON, MARS, RAHU, JUPITER, SATURN, MERCURY,  # 10-18
-            KETU, VENUS, SUN, MOON, MARS, RAHU, JUPITER, SATURN, MERCURY   # 19-27
-        ]
-        
-        starting_lord = nakshatra_lords[nakshatra]
-        starting_lord_index = self.vimshottari_order.index(starting_lord)
-        
-        # Calculate remaining duration of the first dasha
-        total_years = self.vimshottari_periods[starting_lord]
-        remaining_years = total_years * (1 - progression)
-        
-        # Calculate start date of the first dasha
-        first_dasha_start = birth_date - timedelta(days=progression * total_years * 365.25)
-        
-        # Generate all dasha periods
-        result = {
-            "birth_date": birth_date,
-            "birth_nakshatra": nakshatra + 1,  # 1-based nakshatra
-            "birth_nakshatra_progression": progression,
-            "dasha_sequence": []
-        }
-        
-        current_date = first_dasha_start
-        
-        # Add the first mahadasha (main period)
-        first_mahadasha = {
-            "planet": starting_lord,
-            "start_date": current_date,
-            "end_date": current_date + timedelta(days=remaining_years * 365.25),
-            "duration_years": remaining_years,
-            "antardashas": []  # Sub-periods
-        }
-        
-        # Calculate antardashas (sub-periods) for the first mahadasha
-        first_mahadasha["antardashas"] = self._calculate_antardashas(
-            starting_lord, first_mahadasha["start_date"], remaining_years)
-        
-        result["dasha_sequence"].append(first_mahadasha)
-        current_date = first_mahadasha["end_date"]
-        
-        # Calculate the remaining mahadashas
-        for i in range(1, 9):
-            planet_index = (starting_lord_index + i) % 9
-            planet = self.vimshottari_order[planet_index]
-            duration = self.vimshottari_periods[planet]
-            
-            mahadasha = {
-                "planet": planet,
-                "start_date": current_date,
-                "end_date": current_date + timedelta(days=duration * 365.25),
-                "duration_years": duration,
-                "antardashas": []  # Sub-periods
-            }
-            
-            # Calculate antardashas (sub-periods)
-            mahadasha["antardashas"] = self._calculate_antardashas(
-                planet, mahadasha["start_date"], duration)
-            
-            result["dasha_sequence"].append(mahadasha)
-            current_date = mahadasha["end_date"]
-            
-        return result
-    
-    def _calculate_antardashas(self, mahadasha_lord: int, start_date: datetime, duration_years: float) -> List[Dict]:
-        """
-        Calculate antardashas (sub-periods) for a mahadasha.
-        
-        Args:
-            mahadasha_lord: Planet ID of the mahadasha lord
-            start_date: Start date of the mahadasha
-            duration_years: Duration of the mahadasha in years
-            
-        Returns:
-            List of antardashas with their details
-        """
-        antardashas = []
-        mahadasha_days = duration_years * 365.25
-        
-        # Start with the mahadasha lord itself
-        lord_index = self.vimshottari_order.index(mahadasha_lord)
-        current_date = start_date
-        
-        for i in range(9):
-            planet_index = (lord_index + i) % 9
-            planet = self.vimshottari_order[planet_index]
-            
-            # Calculate proportion and duration
-            proportion = self.vimshottari_periods[planet] / 120
-            antardasha_days = mahadasha_days * proportion
-            
-            antardasha = {
-                "planet": planet,
-                "start_date": current_date,
-                "end_date": current_date + timedelta(days=antardasha_days),
-                "duration_days": antardasha_days,
-                "pratyantardashas": []  # Sub-sub-periods
-            }
-            
-            # Calculate pratyantardashas (sub-sub-periods)
-            antardasha["pratyantardashas"] = self._calculate_pratyantardashas(
-                planet, antardasha["start_date"], antardasha_days)
-            
-            antardashas.append(antardasha)
-            current_date = antardasha["end_date"]
-            
-        return antardashas
-    
-    def _calculate_pratyantardashas(self, antardasha_lord: int, start_date: datetime, duration_days: float) -> List[Dict]:
-        """
-        Calculate pratyantardashas (sub-sub-periods) for an antardasha.
-        
-        Args:
-            antardasha_lord: Planet ID of the antardasha lord
-            start_date: Start date of the antardasha
-            duration_days: Duration of the antardasha in days
-            
-        Returns:
-            List of pratyantardashas with their details
-        """
-        pratyantardashas = []
-        
-        # Start with the antardasha lord itself
-        lord_index = self.vimshottari_order.index(antardasha_lord)
-        current_date = start_date
-        
-        for i in range(9):
-            planet_index = (lord_index + i) % 9
-            planet = self.vimshottari_order[planet_index]
-            
-            # Calculate proportion and duration
-            proportion = self.vimshottari_periods[planet] / 120
-            pratyantardasha_days = duration_days * proportion
-            
-            pratyantardasha = {
-                "planet": planet,
-                "start_date": current_date,
-                "end_date": current_date + timedelta(days=pratyantardasha_days),
-                "duration_days": pratyantardasha_days
-            }
-            
-            pratyantardashas.append(pratyantardasha)
-            current_date = pratyantardasha["end_date"]
-            
-        return pratyantardashas
+    # calculate_vimshottari_dasha, _calculate_antardashas, _calculate_pratyantardashas
+    # have been moved to PlanetaryCalculator in planetary_positions.py
     
     def calculate_yogini_dasha(self, birth_moon_longitude: float, birth_date: Union[str, datetime]) -> Dict:
         """
@@ -519,21 +290,6 @@ class DashaCalculator:
             "antardasha_influence": antar_sig,
             "pratyantardasha_influence": pratyantar_sig
         }
-    
-    def _get_planet_name(self, planet_id: int) -> str:
-        """Get the name of a planet from its ID."""
-        planet_names = {
-            SUN: "Sun",
-            MOON: "Moon",
-            MERCURY: "Mercury",
-            VENUS: "Venus",
-            MARS: "Mars",
-            JUPITER: "Jupiter",
-            SATURN: "Saturn",
-            RAHU: "Rahu",
-            KETU: "Ketu"
-        }
-        return planet_names.get(planet_id, f"Planet {planet_id}")
 
 
 # Example usage
@@ -546,16 +302,16 @@ if __name__ == "__main__":
     moon_position = calculator.get_planet_position(MOON, birth_date)
     moon_longitude = moon_position["longitude"]
     
-    # Calculate Vimshottari dasha
-    vimshottari_dasha = dasha_calculator.calculate_vimshottari_dasha(moon_longitude, birth_date)
+    # Calculate Vimshottari dasha using PlanetaryCalculator instance
+    vimshottari_dasha = calculator.calculate_vimshottari_dasha(moon_longitude, birth_date)
     
     # Find current dasha
     current_date = "2023-01-01"
     current_dasha = dasha_calculator.find_current_dasha(vimshottari_dasha, current_date)
     
     # Print current dasha
-    print(f"Current Mahadasha: {dasha_calculator._get_planet_name(current_dasha['mahadasha']['planet'])}")
-    print(f"Current Antardasha: {dasha_calculator._get_planet_name(current_dasha['antardasha']['planet'])}")
+    print(f"Current Mahadasha: {get_planet_name(current_dasha['mahadasha']['planet'])}")
+    print(f"Current Antardasha: {get_planet_name(current_dasha['antardasha']['planet'])}")
     
     # Get financial forecast
     forecast = dasha_calculator.get_financial_forecast_from_dasha(current_dasha)

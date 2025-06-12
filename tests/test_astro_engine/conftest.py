@@ -1,14 +1,18 @@
 """
 Pytest fixtures for astro_engine tests.
 """
+import sys # Added
+from pathlib import Path # Added
+sys.path.insert(0, str(Path(__file__).resolve().parents[2])) # Added
+
 import pytest
 from datetime import datetime
 import pandas as pd
 import numpy as np
 from unittest.mock import patch, MagicMock
 
-from astro_engine.constants import SUN, MOON, MARS, MERCURY, JUPITER, VENUS, SATURN, RAHU, KETU
-from astro_engine.planetary_positions import PlanetaryCalculator
+from src.astro_engine.constants import SUN, MOON, MARS, MERCURY, JUPITER, VENUS, SATURN, RAHU, KETU # Changed
+from src.astro_engine.planetary_positions import PlanetaryCalculator # Changed
 
 
 @pytest.fixture

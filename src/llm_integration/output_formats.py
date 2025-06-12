@@ -30,7 +30,9 @@ class OutputFormatter:
     Formatter for LLM outputs to different formats.
     """
     
-    def __init__(self, output_dir: str = "output"):
+    from .constants import DEFAULT_OUTPUT_DIR
+
+    def __init__(self, output_dir: str = DEFAULT_OUTPUT_DIR):
         """
         Initialize the output formatter.
         

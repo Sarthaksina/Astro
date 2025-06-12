@@ -7,9 +7,10 @@ detailed performance metrics and visualizations for market prediction models.
 
 import argparse
 import json
-import logging
+# import logging # Removed
 import os
 from datetime import datetime
+from src.utils.logger import get_logger # Added
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any, Tuple
 
@@ -28,8 +29,8 @@ import mlflow.pytorch
 from src.models.model_factory import create_model_from_config
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 
 class ModelEvaluator:

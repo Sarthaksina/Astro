@@ -8,10 +8,11 @@ Provides real-time communication between the backend services and dashboard clie
 import asyncio
 import websockets
 import json
-import logging
+# import logging # Removed
 from datetime import datetime, timedelta
 from typing import Dict, Set, Any, Optional
 import threading
+from src.utils.logger import get_logger # Added
 import queue
 import signal
 import sys
@@ -23,13 +24,14 @@ sys.path.append(str(project_root))
 
 from src.astro_engine.planetary_positions import PlanetaryCalculator
 from src.trading.strategy_framework import VedicAstrologyStrategy
+from .constants import DEFAULT_HOST, DEFAULT_PORT # MAX_CONNECTIONS is not used here
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__) # Changed
 
 class WebSocketServer:
     """WebSocket server for real-time dashboard communication."""
     
-    def __init__(self, host: str = "localhost", port: int = 8765):
+    def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
         """
         Initialize WebSocket server.
         
@@ -434,20 +436,23 @@ class WebSocketServer:
 # Server runner script
 if __name__ == "__main__":
     import argparse
-    
+    # Import constants for main block defaults
+    from .constants import DEFAULT_HOST, DEFAULT_PORT
+
     parser = argparse.ArgumentParser(description="Cosmic Market Oracle WebSocket Server")
-    parser.add_argument("--host", default="localhost", help="Server host")
-    parser.add_argument("--port", type=int, default=8765, help="Server port")
+    parser.add_argument("--host", default=DEFAULT_HOST, help="Server host")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server port")
     parser.add_argument("--log-level", default="INFO", help="Log level")
     
     args = parser.parse_args()
     
     # Configure logging
-    logging.basicConfig(
-        level=getattr(logging, args.log_level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
+    # logging.basicConfig(...) # Removed
+    # The module-level logger (now using get_logger) will be used.
+    # If specific configuration for __main__ is needed, setup_logger could be used here,
+    # potentially passing args.log_level. For now, relying on get_logger's default setup.
+    logger.info(f"Log level set to {args.log_level} (Note: This may not be effective if get_logger doesn't use it)")
+
     # Create and start server
     server = WebSocketServer(host=args.host, port=args.port)
     server.start_server()

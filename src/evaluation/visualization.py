@@ -9,7 +9,6 @@ performance across market regimes, metric distributions, and robustness heatmaps
 
 This module consolidates visualization functionality from multiple sources:
 - Basic performance visualization (predictions vs actuals, error distributions)
-- Market regime comparison visualization (previously in regime_visualizer.py)
 - Validation results visualization (cross-validation, walk-forward validation)
 """
 

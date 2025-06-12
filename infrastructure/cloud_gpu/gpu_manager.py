@@ -11,9 +11,10 @@ to optimize cost efficiency for different workloads.
 import os
 import json
 import time
-import logging
+# import logging # Removed
 from typing import Dict, List, Optional, Union, Any
 import subprocess
+from src.utils.logger import get_logger # Added
 import requests
 from datetime import datetime, timedelta
 import yaml
@@ -25,8 +26,8 @@ from .vast_ai_manager import VastAIManager
 from .thunder_compute_manager import ThunderComputeManager
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 
 class GPUManager:

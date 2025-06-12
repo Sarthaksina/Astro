@@ -7,7 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from scipy import stats
 
-from src.utils.logging_config import get_logger
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -32,12 +32,28 @@ class DataDriftDetector:
             reference_data: Reference dataset or path to reference data
             config_path: Path to drift detection configuration file
         """
+from src.utils.config import Config # Added import
+
         # Load configuration
-        self.config_path = Path(config_path) if config_path else Path("config/monitoring.json")
-        self.config = self._load_config()
+        if config_path:
+            self.config = Config(config_path)
+        else:
+            # Default to loading "config/monitoring.json" if no path provided,
+            # or handle if a global config object is expected to be passed.
+            # For now, let's assume it might load its own specific config if no generic one is passed.
+            # This part might need refinement based on how global config is managed.
+            default_monitoring_config_path = Path("config/monitoring.json")
+            if default_monitoring_config_path.exists():
+                self.config = Config(default_monitoring_config_path)
+            else:
+                # Fallback to internal defaults if "config/monitoring.json" is not found
+                logger.warning(f"Monitoring config file {default_monitoring_config_path} not found. Using internal defaults for DataDriftDetector.")
+                # Create a Config object with internal defaults
+                self.config = Config(None) # Pass None to avoid file load attempt
+                self.config.config = self._get_default_config() # Manually set the config dict
         
         # Set up monitoring directory
-        self.monitoring_dir = Path(self.config.get("monitoring_dir", "monitoring"))
+        self.monitoring_dir = Path(self.config.get("monitoring_dir", self._get_default_config()["monitoring_dir"]))
         self.drift_dir = self.monitoring_dir / "drift"
         self.drift_dir.mkdir(parents=True, exist_ok=True)
         
@@ -60,26 +76,8 @@ class DataDriftDetector:
         
         logger.info("Initialized data drift detector")
     
-    def _load_config(self) -> Dict[str, Any]:
-        """
-        Load drift detection configuration.
-        
-        Returns:
-            Configuration dictionary
-        """
-        try:
-            if not self.config_path.exists():
-                logger.warning(f"Monitoring config file {self.config_path} not found, using defaults")
-                return self._get_default_config()
-            
-            with open(self.config_path, "r") as f:
-                config = json.load(f)
-            
-            logger.info(f"Loaded drift detection configuration from {self.config_path}")
-            return config
-        except Exception as e:
-            logger.error(f"Failed to load drift detection config: {e}")
-            return self._get_default_config()
+    # Removed _load_config method as Config class handles loading.
+    # _get_default_config is kept for now if direct Config init with defaults is needed as fallback.
     
     def _get_default_config(self) -> Dict[str, Any]:
         """
@@ -94,12 +92,12 @@ class DataDriftDetector:
                 "detection_method": "ks_test",
                 "significance_level": 0.05,
                 "min_samples_required": 100,
-                "features_to_monitor": ["all"],
+            "features_to_monitor": ["all"], # Ensure this is a list
                 "reference_dataset": "data/processed/reference.csv"
             },
             "alerts": {
                 "enabled": True,
-                "channels": ["log"],
+            "channels": ["log"], # Ensure this is a list
                 "throttle_period_seconds": 3600
             }
         }
@@ -188,7 +186,7 @@ class DataDriftDetector:
             column_data = data[column].dropna()
             
             # Skip columns with insufficient data
-            min_samples = self.config.get("data_drift", {}).get("min_samples_required", 100)
+            min_samples = self.config.get("data_drift.min_samples_required", 100)
             if len(column_data) < min_samples:
                 logger.warning(f"Insufficient samples for feature {column}: {len(column_data)} < {min_samples}")
                 continue
@@ -263,7 +261,7 @@ class DataDriftDetector:
                 "type": ref_stats["type"],
                 "drift_detected": False,
                 "p_value": None,
-                "method": self.config.get("data_drift", {}).get("detection_method", "ks_test"),
+                "method": self.config.get("data_drift.detection_method", "ks_test"),
                 "statistics": {
                     "reference": {
                         k: v for k, v in ref_stats.items() 
@@ -337,8 +335,8 @@ class DataDriftDetector:
         Returns:
             Tuple of (p_value, drift_detected)
         """
-        method = self.config.get("data_drift", {}).get("detection_method", "ks_test")
-        significance_level = self.config.get("data_drift", {}).get("significance_level", 0.05)
+        method = self.config.get("data_drift.detection_method", "ks_test")
+        significance_level = self.config.get("data_drift.significance_level", 0.05)
         
         # For demonstration, we'll use a simple approach comparing distributions
         # In a real implementation, this would use the actual data and statistical tests
@@ -391,8 +389,8 @@ class DataDriftDetector:
         Returns:
             Tuple of (p_value, drift_detected)
         """
-        method = self.config.get("data_drift", {}).get("detection_method", "chi2_test")
-        significance_level = self.config.get("data_drift", {}).get("significance_level", 0.05)
+        method = self.config.get("data_drift.detection_method", "chi2_test")
+        significance_level = self.config.get("data_drift.significance_level", 0.05)
         
         # For demonstration, we'll use a simple approach comparing distributions
         # In a real implementation, this would use the actual data and statistical tests

@@ -21,7 +21,9 @@ from datetime import datetime, timedelta
 
 from .constants import (
     SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU,
-    GEOCENTRIC, HELIOCENTRIC
+    GEOCENTRIC, HELIOCENTRIC,
+    VIMSHOTTARI_PERIODS, VIMSHOTTARI_ORDER, # Preserving existing imports
+    NAKSHATRA_PROPERTIES # Added NAKSHATRA_PROPERTIES
 )
 
 
@@ -404,4 +406,132 @@ class PlanetaryCalculator:
             'birth_moon_longitude': birth_moon_longitude,
             'birth_nakshatra': nakshatra + 1,  # 1-based nakshatra
             'dashas': dashas
+        }
+
+    # Methods moved from DashaCalculator
+    def _calculate_antardashas(self, mahadasha_lord: int, start_date: datetime, duration_years: float) -> List[Dict]:
+        """
+        Calculate antardashas (sub-periods) for a mahadasha.
+
+        Args:
+            mahadasha_lord: Planet ID of the mahadasha lord
+            start_date: Start date of the mahadasha
+            duration_years: Duration of the mahadasha in years
+
+        Returns:
+            List of antardashas with their details
+        """
+        antardashas = []
+        mahadasha_days = duration_years * 365.25
+
+        # Start with the mahadasha lord itself
+        lord_index = VIMSHOTTARI_ORDER.index(mahadasha_lord) # Use imported constant
+        current_date = start_date
+
+        for i in range(9):
+            planet_index = (lord_index + i) % 9
+            planet = VIMSHOTTARI_ORDER[planet_index] # Use imported constant
+
+            # Calculate proportion and duration
+            proportion = VIMSHOTTARI_PERIODS[planet] / 120 # Use imported constant
+            antardasha_days = mahadasha_days * proportion
+
+            antardasha = {
+                "planet": planet,
+                "start_date": current_date,
+                "end_date": current_date + timedelta(days=antardasha_days),
+                "duration_days": antardasha_days,
+                "pratyantardashas": []  # Sub-sub-periods
+            }
+
+            # Calculate pratyantardashas (sub-sub-periods)
+            antardasha["pratyantardashas"] = self._calculate_pratyantardashas(
+                planet, antardasha["start_date"], antardasha_days)
+
+            antardashas.append(antardasha)
+            current_date = antardasha["end_date"]
+
+        return antardashas
+
+    def _calculate_pratyantardashas(self, antardasha_lord: int, start_date: datetime, duration_days: float) -> List[Dict]:
+        """
+        Calculate pratyantardashas (sub-sub-periods) for an antardasha.
+
+        Args:
+            antardasha_lord: Planet ID of the antardasha lord
+            start_date: Start date of the antardasha
+            duration_days: Duration of the antardasha in days
+
+        Returns:
+            List of pratyantardashas with their details
+        """
+        pratyantardashas = []
+
+        # Start with the antardasha lord itself
+        lord_index = VIMSHOTTARI_ORDER.index(antardasha_lord) # Use imported constant
+        current_date = start_date
+
+        for i in range(9):
+            planet_index = (lord_index + i) % 9
+            planet = VIMSHOTTARI_ORDER[planet_index] # Use imported constant
+
+            # Calculate proportion and duration
+            proportion = VIMSHOTTARI_PERIODS[planet] / 120 # Use imported constant
+            pratyantardasha_days = duration_days * proportion
+
+            pratyantardasha = {
+                "planet": planet,
+                "start_date": current_date,
+                "end_date": current_date + timedelta(days=pratyantardasha_days),
+                "duration_days": pratyantardasha_days
+            }
+
+            pratyantardashas.append(pratyantardasha)
+            current_date = pratyantardasha["end_date"]
+
+        return pratyantardashas
+
+    def get_nakshatra_details(self, longitude: float) -> Dict[str, Union[int, str, float, None]]:
+        """
+        Calculate detailed Nakshatra information for a given longitude.
+
+        Args:
+            longitude: Zodiacal longitude in degrees (0-360).
+
+        Returns:
+            Dictionary containing Nakshatra details:
+                - number: Nakshatra number (1-27)
+                - name: Name of the Nakshatra
+                - pada: Pada (quarter) of the Nakshatra (1-4)
+                - longitude_in_nakshatra: Degree within the Nakshatra (0-13.333...)
+                - degree_in_pada: Degree within the Pada (0-3.333...)
+                - financial_nature: Financial nature of the Nakshatra
+                - ruler: Ruling planet ID of the Nakshatra
+        """
+        if not (0 <= longitude < 360):
+            raise ValueError("Longitude must be between 0 and 359.99...")
+
+        nakshatra_span = 360 / 27  # Each nakshatra spans 13 degrees 20 minutes (13.333... degrees)
+        pada_span = nakshatra_span / 4  # Each pada spans 3 degrees 20 minutes (3.333... degrees)
+
+        nakshatra_number = int(longitude / nakshatra_span) + 1
+        longitude_in_nakshatra = longitude % nakshatra_span
+
+        pada_number = int(longitude_in_nakshatra / pada_span) + 1
+        # Ensure pada_number does not exceed 4, can happen due to float precision if longitude_in_nakshatra is exactly nakshatra_span
+        if pada_number > 4:
+            pada_number = 4
+
+        degree_in_pada = longitude_in_nakshatra % pada_span
+
+        properties = NAKSHATRA_PROPERTIES.get(nakshatra_number, {})
+
+        return {
+            "number": nakshatra_number,
+            "name": properties.get("name", "Unknown"),
+            "pada": pada_number,
+            "longitude_in_nakshatra": longitude_in_nakshatra,
+            "degree_in_pada": degree_in_pada,
+            "financial_nature": properties.get("financial_nature", "neutral"),
+            "ruler": properties.get("ruler")
         }

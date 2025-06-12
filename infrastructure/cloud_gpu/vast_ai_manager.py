@@ -7,9 +7,10 @@ including creating, monitoring, and terminating instances based on workload requ
 import os
 import json
 import time
-import logging
+# import logging # Removed
 import requests
 import yaml
+from src.utils.logger import get_logger # Added
 from src.trading.unified_mcts import MCTS, MCTSPredictor
 from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
@@ -17,8 +18,8 @@ from typing import Dict, List, Optional, Union, Any
 from datetime import datetime, timedelta
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 class VASTAIManager:
     """Manager for VAST.ai GPU instances.

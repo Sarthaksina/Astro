@@ -31,11 +31,14 @@ import json
 import os
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+# logger = logging.getLogger(__name__) # Removed
+
+from src.utils.logger import get_logger # Added
+logger = get_logger(__name__) # Added
 
 
 class MarketRegimeClassifier:

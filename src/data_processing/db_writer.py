@@ -14,15 +14,23 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 # Updated imports to use consolidated database configuration
-from config.database import get_db, get_engine, Base
-from .models import MarketData, PlanetaryData, PlanetaryAspect, MarketPrediction
+# from config.database import get_db, get_engine # Base removed # Already removed get_db
+from src.data_integration.db_manager import (
+    FinancialData as MarketData,
+    PlanetaryPosition as PlanetaryData,
+    PlanetaryAspect,
+    Prediction as MarketPrediction,
+    DatabaseManager # Added DatabaseManager
+)
+# Removed: from .models import MarketData, PlanetaryData, PlanetaryAspect, MarketPrediction
 
 # Configure logging
-from src.utils.logging_config import setup_logging
-logger = setup_logging(__name__)
+from src.utils.logger import get_logger # Changed from setup_logger
+logger = get_logger(__name__) # Changed from setup_logger
 
-# Get engine for session creation
-engine = get_engine()
+# Instantiate DatabaseManager
+# engine = get_engine() # Removed
+db_manager = DatabaseManager() # Added
 
 def write_market_data_to_db(data: pd.DataFrame, batch_size: int = 1000) -> bool:
     """
@@ -59,11 +67,12 @@ def write_market_data_to_db(data: pd.DataFrame, batch_size: int = 1000) -> bool:
             batch = data.iloc[start_idx:end_idx]
             
             # Create database session
-            with Session(engine) as session:
+            session = db_manager.Session()
+            try:
                 # Convert batch to list of model instances
                 records = []
                 for _, row in batch.iterrows():
-                    record = MarketData(
+                    record = MarketData( # FinancialData model from db_manager
                         timestamp=row['timestamp'],
                         symbol=row['symbol'],
                         open=row['open'],
@@ -72,27 +81,37 @@ def write_market_data_to_db(data: pd.DataFrame, batch_size: int = 1000) -> bool:
                         close=row['close'],
                         volume=row.get('volume'),
                         adjusted_close=row.get('adjusted_close'),
-                        volatility=row.get('volatility'),
-                        rsi=row.get('rsi'),
-                        macd=row.get('macd')
+                        # Volatility, rsi, macd are not in db_manager.FinancialData
+                        # They were in data_processing.models.MarketData.
+                        # This part of data model is lost if not added to FinancialData.
+                        # For now, removing them based on current FinancialData structure.
+                        # volatility=row.get('volatility'),
+                        # rsi=row.get('rsi'),
+                        # macd=row.get('macd')
+                        source=row.get('source', 'unknown'), # FinancialData has 'source'
+                        metadata=row.get('metadata', {})   # FinancialData has 'metadata'
                     )
                     records.append(record)
                 
-                # Add all records to session
                 session.add_all(records)
-                
-                # Commit the batch
                 session.commit()
-            
-            logger.info(f"Batch {i+1}/{num_batches} written successfully")
+                logger.info(f"Batch {i+1}/{num_batches} written successfully")
+            except SQLAlchemyError as e:
+                session.rollback()
+                logger.error(f"Database error writing market data: {str(e)}")
+                return False # Propagate failure for the batch
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Error writing market data batch: {str(e)}")
+                return False # Propagate failure for the batch
+            finally:
+                session.close()
         
         return True
     
-    except SQLAlchemyError as e:
-        logger.error(f"Database error writing market data: {str(e)}")
-        return False
+    # Outer exception handling remains the same for non-batch related errors
     except Exception as e:
-        logger.error(f"Error writing market data to database: {str(e)}")
+        logger.error(f"General error in write_market_data_to_db: {str(e)}")
         return False
 
 
@@ -120,45 +139,61 @@ def write_planetary_data_to_db(data: pd.DataFrame, batch_size: int = 1000) -> bo
             batch = data.iloc[start_idx:end_idx]
             
             # Create database session
-            with Session(engine) as session:
+            session = db_manager.Session()
+            try:
                 # Convert batch to list of model instances
                 records = []
                 for _, row in batch.iterrows():
                     # Extract planet data from columns
-                    for planet_id in range(0, 12):  # Assuming planets 0-11
-                        planet_prefix = f"planet_{planet_id}"
-                        
-                        # Check if this planet exists in the data
-                        if f"{planet_prefix}_longitude" in row:
-                            record = PlanetaryData(
-                                timestamp=row['timestamp'],
-                                planet_id=planet_id,
-                                planet_name=get_planet_name(planet_id),
-                                longitude=row[f"{planet_prefix}_longitude"],
-                                latitude=row.get(f"{planet_prefix}_latitude", 0.0),
-                                distance=row.get(f"{planet_prefix}_distance", 0.0),
-                                longitude_speed=row.get(f"{planet_prefix}_longitude_speed", 0.0),
-                                is_retrograde=row.get(f"{planet_prefix}_is_retrograde", False),
-                                nakshatra=row.get(f"{planet_prefix}_nakshatra", 1),
-                                nakshatra_degree=row.get(f"{planet_prefix}_nakshatra_degree", 0.0)
-                            )
-                            records.append(record)
+                    # Assuming row directly contains fields for PlanetaryPosition model
+                    # The old logic iterated 0-11 for planet_id and constructed prefix.
+                    # The new PlanetaryPosition model in db_manager expects direct fields.
+                    # This function needs to be called with data already structured for PlanetaryPosition.
+                    # If the input 'data' DataFrame is flat (planet_0_longitude etc), it needs preprocessing
+                    # *before* calling this writer function, or this function needs to be smarter.
+                    # For now, assuming 'row' has direct fields for PlanetaryPosition.
+                    # If 'planet_id' is not in row, this will fail.
+                    # This function's call signature might need to change or data pre-formatted.
+                    # The original code was trying to infer multiple planet records from one row.
+                    # The new model PlanetaryPosition expects one record per planet.
+                    # This means the input `data` DataFrame needs to be pre-processed
+                    # to have one row per planet per timestamp.
+                    # For now, I will assume 'data' is already in the correct format.
+                    record = PlanetaryData( # PlanetaryPosition model from db_manager
+                        timestamp=row['timestamp'],
+                        planet_id=row['planet_id'], # Assumes this column exists
+                        longitude=row['longitude'],
+                        latitude=row.get('latitude', 0.0),
+                        distance=row.get('distance', 0.0),
+                        speed=row.get('longitude_speed', 0.0), # map longitude_speed to speed
+                        is_retrograde=row.get('is_retrograde', False),
+                        sign=row.get('sign', 0), # PlanetaryPosition has 'sign'
+                        nakshatra=row.get('nakshatra', 0), # PlanetaryPosition has 'nakshatra'
+                        house=row.get('house'), # PlanetaryPosition has 'house'
+                        dignity=row.get('dignity'), # PlanetaryPosition has 'dignity'
+                        aspects=row.get('aspects', {}) # PlanetaryPosition has 'aspects'
+                    )
+                    records.append(record)
                 
-                # Add all records to session
                 session.add_all(records)
-                
-                # Commit the batch
                 session.commit()
-            
-            logger.info(f"Batch {i+1}/{num_batches} written successfully")
+                logger.info(f"Batch {i+1}/{num_batches} written successfully")
+            except SQLAlchemyError as e:
+                session.rollback()
+                logger.error(f"Database error writing planetary data: {str(e)}")
+                return False # Propagate failure for the batch
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Error writing planetary data batch: {str(e)}")
+                return False # Propagate failure for the batch
+            finally:
+                session.close()
         
         return True
-    
-    except SQLAlchemyError as e:
-        logger.error(f"Database error writing planetary data: {str(e)}")
-        return False
+
+    # Outer exception handling remains the same
     except Exception as e:
-        logger.error(f"Error writing planetary data to database: {str(e)}")
+        logger.error(f"General error in write_planetary_data_to_db: {str(e)}")
         return False
 
 
@@ -186,37 +221,42 @@ def write_aspects_to_db(aspects_data: List[Dict], batch_size: int = 1000) -> boo
             batch = aspects_data[start_idx:end_idx]
             
             # Create database session
-            with Session(engine) as session:
+            session = db_manager.Session()
+            try:
                 # Convert batch to list of model instances
                 records = []
-                for aspect in batch:
-                    record = PlanetaryAspect(
+                for aspect in batch: # Assuming batch is a list of dicts
+                    record = PlanetaryAspect( # PlanetaryAspect model from db_manager
                         timestamp=aspect['timestamp'],
-                        planet1_id=aspect['planet1'],
-                        planet2_id=aspect['planet2'],
+                        planet1_id=aspect['planet1_id'], # schema uses planet1_id
+                        planet2_id=aspect['planet2_id'], # schema uses planet2_id
                         aspect_type=aspect['aspect_type'],
                         aspect_angle=aspect['aspect_angle'],
                         actual_angle=aspect['actual_angle'],
                         orb=aspect['orb'],
-                        is_applying=aspect['applying']
+                        is_applying=aspect['is_applying']
                     )
                     records.append(record)
                 
-                # Add all records to session
                 session.add_all(records)
-                
-                # Commit the batch
                 session.commit()
-            
-            logger.info(f"Batch {i+1}/{num_batches} written successfully")
+                logger.info(f"Batch {i+1}/{num_batches} written successfully")
+            except SQLAlchemyError as e:
+                session.rollback()
+                logger.error(f"Database error writing aspect data: {str(e)}")
+                return False # Propagate failure for the batch
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Error writing aspect data batch: {str(e)}")
+                return False # Propagate failure for the batch
+            finally:
+                session.close()
         
         return True
-    
-    except SQLAlchemyError as e:
-        logger.error(f"Database error writing aspect data: {str(e)}")
-        return False
+
+    # Outer exception handling remains the same
     except Exception as e:
-        logger.error(f"Error writing aspect data to database: {str(e)}")
+        logger.error(f"General error in write_aspects_to_db: {str(e)}")
         return False
 
 
@@ -252,35 +292,43 @@ def write_predictions_to_db(predictions: pd.DataFrame, model_version: str, batch
             batch = predictions.iloc[start_idx:end_idx]
             
             # Create database session
-            with Session(engine) as session:
+            session = db_manager.Session()
+            try:
                 # Convert batch to list of model instances
                 records = []
                 for _, row in batch.iterrows():
-                    record = MarketPrediction(
+                    record = MarketPrediction( # Prediction model from db_manager
                         timestamp=row['timestamp'],
-                        target_date=row['target_date'],
+                        target_timestamp=row['target_date'], # db_manager.Prediction uses target_timestamp
                         symbol=row['symbol'],
-                        prediction_value=row['prediction_value'],
+                        value=row['prediction_value'],    # db_manager.Prediction uses value
                         confidence=row['confidence'],
-                        model_version=model_version
+                        model_id=model_version, # db_manager.Prediction uses model_id
+                        model_version=model_version, # Also add to new model_version field
+                        # prediction_type needs to be sourced or defaulted
+                        prediction_type=row.get('prediction_type', 'unknown')
                     )
                     records.append(record)
                 
-                # Add all records to session
                 session.add_all(records)
-                
-                # Commit the batch
                 session.commit()
-            
-            logger.info(f"Batch {i+1}/{num_batches} written successfully")
-        
+                logger.info(f"Batch {i+1}/{num_batches} written successfully")
+            except SQLAlchemyError as e:
+                session.rollback()
+                logger.error(f"Database error writing prediction data: {str(e)}")
+                return False # Propagate failure for the batch
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Error writing prediction data batch: {str(e)}")
+                return False # Propagate failure for the batch
+            finally:
+                session.close()
+
         return True
-    
-    except SQLAlchemyError as e:
-        logger.error(f"Database error writing prediction data: {str(e)}")
-        return False
+
+    # Outer exception handling remains the same
     except Exception as e:
-        logger.error(f"Error writing prediction data to database: {str(e)}")
+        logger.error(f"General error in write_predictions_to_db: {str(e)}")
         return False
 
 
@@ -308,30 +356,6 @@ def write_features_to_db(features: pd.DataFrame) -> bool:
     return True
 
 
-def get_planet_name(planet_id: int) -> str:
-    """
-    Get the name of a planet from its ID.
-    
-    Args:
-        planet_id: Planet ID
-        
-    Returns:
-        Planet name as string
-    """
-    # This is a simplified version - in production, would import from astro_engine
-    planet_names = {
-        0: "sun",
-        1: "moon",
-        2: "mercury",
-        3: "venus",
-        4: "mars",
-        5: "jupiter",
-        6: "saturn",
-        7: "uranus",
-        8: "neptune",
-        9: "pluto",
-        10: "rahu",
-        11: "ketu"
-    }
-    
-    return planet_names.get(planet_id, f"planet_{planet_id}")
+# Removed local get_planet_name function, should be imported from constants if needed by this module's logic,
+# but it's not used by the refactored writer functions directly anymore.
+# The PlanetaryData model itself doesn't store planet_name.

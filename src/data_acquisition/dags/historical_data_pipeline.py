@@ -36,15 +36,29 @@ def fetch_market_data(**kwargs):
     """
     Fetch historical market data from sources and store in TimescaleDB.
     """
-    from src.data_acquisition.market_data import fetch_historical_data
+    from src.data_acquisition.financial_data import YahooFinanceDataSource # Added
+    logger = kwargs['ti'].log # Added Airflow task logger
     
     # Get parameters
     start_date = kwargs.get('start_date', '1800-01-01')
     end_date = kwargs.get('end_date', datetime.now().strftime('%Y-%m-%d'))
     source = kwargs.get('source', 'yahoo')
     
-    # Fetch data
-    data = fetch_historical_data(start_date=start_date, end_date=end_date, source=source)
+    symbol_to_fetch = kwargs.get('dag_run').conf.get('symbol', '^DJI') # Get symbol from DAG run config or default
+    logger.info(f"Attempting to fetch market data for symbol: {symbol_to_fetch} from source: {source} for dates: {start_date} to {end_date}")
+
+    if source.lower() == 'yahoo':
+        data_source = YahooFinanceDataSource()
+        data = data_source.fetch_data(
+            symbol=symbol_to_fetch,
+            start_date=start_date,
+            end_date=end_date
+            # Assuming default interval '1d' is acceptable
+        )
+        logger.info(f"Successfully fetched {len(data)} records for {symbol_to_fetch} from Yahoo Finance.")
+    else:
+        logger.error(f"Unsupported data source specified: {source}")
+        raise ValueError(f"Data source '{source}' is not supported by this DAG's fetch_market_data task.")
     
     # Return data for next task
     return data

@@ -43,7 +43,7 @@ if sys.version_info.major != 3 or sys.version_info.minor != 10:
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import project modules
-from src.trading.strategy_framework import VedicAstrologyStrategy
+from src.trading.strategy_framework import BaseStrategy # Changed: VedicAstrologyStrategy removed, BaseStrategy kept/added
 from src.trading.signal_generator import (
     VedicNakshatraSignalGenerator, 
     VedicYogaSignalGenerator,
@@ -52,12 +52,13 @@ from src.trading.signal_generator import (
 )
 from src.trading.backtest import BacktestEngine, BacktestRunner
 from src.data_processing.market_data import MarketDataFetcher
-from src.astro_engine.planetary_positions import PlanetaryCalculator
-from src.feature_engineering.astrological_features import AstrologicalFeatureGenerator
-from src.utils.logger import setup_logger
+from src.astro_engine.planetary_positions import PlanetaryCalculator # Ensure this is present
+# VedicAnalyzer and FinancialYogaAnalyzer are confirmed to be no longer needed directly.
+from src.feature_engineering.astrological_features import AstrologicalFeatureGenerator # Ensure this is present
+from src.utils.logger import get_logger
 
 # Configure logging
-logger = setup_logger("vedic_trading_example")
+logger = get_logger("vedic_trading_example")
 
 
 def load_market_data(symbol: str = "^DJI", start_date: str = "2018-01-01", 
@@ -141,91 +142,23 @@ def generate_planetary_data(start_date: str = "2018-01-01",
     Returns:
         DataFrame with planetary data
     """
-    logger.info(f"Generating planetary data from {start_date} to {end_date}")
+    logger.info(f"Generating astrological features from {start_date} to {end_date}")
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+    end_dt = datetime.strptime(end_date, "%Y-%m-%d")
     
-    # Convert string dates to datetime
-    start = datetime.strptime(start_date, "%Y-%m-%d")
-    end = datetime.strptime(end_date, "%Y-%m-%d")
-    days = (end - start).days + 1
+    # Create a list of dates for the feature generator
+    # Ensure dates are datetime objects, not just strings, for AstrologicalFeatureGenerator
+    date_list = [start_dt + timedelta(days=x) for x in range((end_dt - start_dt).days + 1)]
     
-    # Create date range
-    date_range = [start + timedelta(days=i) for i in range(days)]
+    # Initialize AstrologicalFeatureGenerator
+    astro_feature_gen = AstrologicalFeatureGenerator()
     
-    # Initialize planetary calculator
-    calculator = PlanetaryCalculator()
+    # Generate features
+    # generate_features_for_dates returns a DataFrame with dates as index
+    astro_features_df = astro_feature_gen.generate_features_for_dates(date_list)
     
-    # Initialize feature generator
-    feature_generator = AstrologicalFeatureGenerator()
-    
-    # Generate data for each date
-    planetary_data = []
-    
-    for date in date_range:
-        # Get basic planetary positions
-        positions = calculator.calculate_planet_positions(date)
-        
-        # Get nakshatra details for Moon
-        moon_longitude = positions["Moon"]["longitude"]
-        nakshatra_details = calculator.get_nakshatra_details(moon_longitude)
-        
-        # Get current dasha lord
-        dasha_info = calculator.calculate_vimshottari_dasha(date)
-        
-        # Analyze market trend
-        market_trend = calculator.analyze_market_trend(date)
-        
-        # Analyze financial yogas
-        yogas = calculator.analyze_financial_yogas(date)
-        
-        # Generate special features
-        special_features = feature_generator.generate_special_features(date)
-        
-        # Combine all data
-        data = {
-            "Date": date,
-            # Basic planetary positions
-            "sun_longitude": positions["Sun"]["longitude"],
-            "moon_longitude": moon_longitude,
-            "mercury_longitude": positions["Mercury"]["longitude"],
-            "venus_longitude": positions["Venus"]["longitude"],
-            "mars_longitude": positions["Mars"]["longitude"],
-            "jupiter_longitude": positions["Jupiter"]["longitude"],
-            "saturn_longitude": positions["Saturn"]["longitude"],
-            
-            # Nakshatra details
-            "moon_nakshatra": nakshatra_details["nakshatra_name"],
-            "moon_nakshatra_pada": nakshatra_details["pada"],
-            "moon_nakshatra_financial": "bullish" if nakshatra_details["nakshatra_number"] % 3 == 1 else 
-                                       "bearish" if nakshatra_details["nakshatra_number"] % 3 == 2 else 
-                                       "neutral",
-            
-            # Dasha information
-            "current_dasha_lord": dasha_info["mahadasha"]["planet"],
-            "current_antardasha_lord": dasha_info["antardasha"]["planet"],
-            
-            # Market trend
-            "market_trend_primary_trend": market_trend["primary_trend"],
-            "market_trend_strength": market_trend["strength"],
-            "market_trend_reversal_probability": market_trend["reversal_probability"],
-            
-            # Financial yogas
-            "bullish_yoga_count": yogas["bullish_yoga_count"],
-            "bearish_yoga_count": yogas["bearish_yoga_count"],
-            "neutral_yoga_count": yogas["neutral_yoga_count"],
-        }
-        
-        # Add special features
-        data.update(special_features)
-        
-        planetary_data.append(data)
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(planetary_data)
-    df.set_index("Date", inplace=True)
-    
-    logger.info(f"Generated planetary data for {len(df)} days")
-    
-    return df
+    logger.info(f"Generated {len(astro_features_df.columns)} astrological features for {len(astro_features_df)} days")
+    return astro_features_df
 
 
 def run_single_strategy_example(market_data: pd.DataFrame, planetary_data: pd.DataFrame):
@@ -237,18 +170,25 @@ def run_single_strategy_example(market_data: pd.DataFrame, planetary_data: pd.Da
         planetary_data: Planetary data DataFrame
     """
     logger.info("Running single strategy example")
-    
-    # Create strategy
-    strategy = VedicAstrologyStrategy(
-        name="Vedic Astrology Strategy",
-        description="Trading strategy based on Vedic astrological signals"
-    )
-    
-    # Configure strategy
-    strategy.use_yogas = True
-    strategy.use_nakshatras = True
-    strategy.use_dashas = True
-    strategy.min_signal_strength = 0.6
+
+    # Define a new simple strategy class locally
+    class MyExampleStrategy(BaseStrategy):
+        def __init__(self, signal_generator_instance, name="Modular Vedic Strategy", description="Uses CombinedSignalGenerator"):
+            super().__init__(name, description)
+            self.signal_generator = signal_generator_instance
+
+        def generate_signals(self, market_data: pd.DataFrame, planetary_data: pd.DataFrame) -> pd.DataFrame:
+            # planetary_data here is the DataFrame of astrological features
+            return self.signal_generator.generate_signals(market_data, planetary_data)
+
+    # Instantiate CombinedSignalGenerator
+    combined_gen = CombinedSignalGenerator()
+    # Optionally, add specific generators to combined_gen if defaults are not desired
+    # e.g., combined_gen.add_generator(VedicNakshatraSignalGenerator(), weight=0.5)
+    # For this example, default CombinedSignalGenerator (which includes Nakshatra, Yoga, Dasha) is fine.
+
+    # Instantiate the new strategy
+    strategy = MyExampleStrategy(signal_generator_instance=combined_gen)
     
     # Create backtest engine
     engine = BacktestEngine(initial_capital=100000.0, commission=0.001)
@@ -383,7 +323,8 @@ def main():
     
     # Run examples
     run_single_strategy_example(market_data, planetary_data)
-    run_strategy_comparison_example(market_data, planetary_data)
+    # TODO: Refactor BacktestRunner or this example to use modular strategies
+    # run_strategy_comparison_example(market_data, planetary_data)
     run_signal_generator_example(market_data, planetary_data)
     
     logger.info("Example completed successfully")

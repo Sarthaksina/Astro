@@ -18,18 +18,12 @@ from src.trading.unified_mcts import MCTS, MCTSPredictor
 from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-import logging
+# import logging # Removed
+from src.utils.logger import get_logger # Added
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("deployment.log")
-    ]
-)
-logger = logging.getLogger("deployment")
+# logging.basicConfig(...) # Removed
+logger = get_logger("deployment") # Changed
 
 
 def parse_arguments() -> argparse.Namespace:

@@ -13,7 +13,9 @@ from ..astro_engine.planetary_positions import PlanetaryCalculator
 from ..astro_engine.constants import (SUN, MOON, MERCURY, VENUS, MARS, 
                                  JUPITER, SATURN, URANUS, NEPTUNE, PLUTO, RAHU, KETU,
                                  get_planet_name)
-from ..astro_engine.vedic_dignities import analyze_market_trend, analyze_financial_yogas
+# from ..astro_engine.vedic_dignities import analyze_market_trend, analyze_financial_yogas # Removed
+from ..astro_engine.financial_yogas import FinancialYogaAnalyzer # Added
+from ..astro_engine.vedic_analysis import VedicAnalyzer # Added
 
 
 class AstrologicalFeatureGenerator:
@@ -27,6 +29,8 @@ class AstrologicalFeatureGenerator:
             calculator: Optional PlanetaryCalculator instance. If None, a new one will be created.
         """
         self.calculator = calculator or PlanetaryCalculator()
+        self.yoga_analyzer = FinancialYogaAnalyzer(self.calculator) # Added
+        self.vedic_analyzer = VedicAnalyzer() # Added
         
         # Planet pairs for aspect and relationship calculations
         # Using constants from astro_engine.constants
@@ -111,7 +115,7 @@ class AstrologicalFeatureGenerator:
         
         # Process each planet's position
         for planet_id, position in planets_data.items():
-            planet_name = self._get_planet_name(planet_id)
+            planet_name = get_planet_name(planet_id) # Changed from self._get_planet_name
             
             # Store raw longitude
             features[f"{planet_name}_longitude"] = position["longitude"]
@@ -150,8 +154,8 @@ class AstrologicalFeatureGenerator:
         # Calculate aspects between planet pairs
         for i, planet1_id in enumerate(self.all_planets):
             for j, planet2_id in enumerate(self.all_planets[i+1:], i+1):
-                planet1_name = self._get_planet_name(planet1_id)
-                planet2_name = self._get_planet_name(planet2_id)
+                planet1_name = get_planet_name(planet1_id) # Changed from self._get_planet_name
+                planet2_name = get_planet_name(planet2_id) # Changed from self._get_planet_name
                 
                 angle1 = planets_data[planet1_id]["longitude"]
                 angle2 = planets_data[planet2_id]["longitude"]
@@ -291,7 +295,7 @@ class AstrologicalFeatureGenerator:
                     varga_sign = int(varga_longitude / 30)  # 0-11 for the 12 signs
                     
                     # Store the sign as a feature
-                    planet_name = self._get_planet_name(planet_id)
+                    planet_name = get_planet_name(planet_id) # Changed from self._get_planet_name
                     features[f"{planet_name}_d{division}_sign"] = float(varga_sign)
                     
                     # Encode cyclical varga position
@@ -300,21 +304,39 @@ class AstrologicalFeatureGenerator:
                     features[f"{planet_name}_d{division}_cos"] = cos_varga
         
         # 5. Market trend analysis
-        market_trend = analyze_market_trend(planets_data, date, self.calculator)
+        # market_trend = analyze_market_trend(planets_data, date, self.calculator)
+        vedic_analysis_results = self.vedic_analyzer.analyze_date(date) # planets_data is calculated internally
+        market_trend_info = vedic_analysis_results.get("integrated_forecast", {})
         
         # Encode market trend direction
-        trend_map = {
-            "bullish": 1.0,
-            "neutral": 0.5,
-            "bearish": 0.0,
-            "volatile": 0.25
+        trend_map = { # Mapping from VedicAnalyzer trend description to numerical
+            "Bullish": 1.0,
+            "Moderately Bullish": 0.75,
+            "Neutral": 0.5,
+            "Sideways": 0.5, # Treating Sideways as Neutral
+            "Bearish": 0.0,
+            "Moderately Bearish": 0.25,
+            "Volatile Bullish": 0.6, # Could also be specific values
+            "Volatile Bearish": 0.15,
+            "Volatile Neutral": 0.4,
+            "Volatile Sideways": 0.4
         }
-        features["market_trend"] = trend_map.get(market_trend["primary_trend"], 0.5)
-        features["trend_strength"] = market_trend["strength"] / 100.0  # Normalize to 0-1
-        features["reversal_probability"] = market_trend["reversal_probability"] / 100.0  # Normalize to 0-1
-        
+        # The old `analyze_market_trend` had "primary_trend" and "strength" (0-100)
+        # VedicAnalyzer's "integrated_forecast" has "trend" (string) and "trend_score" (-1 to 1)
+        # and "reversal_probability" is not directly available.
+        features["market_trend"] = trend_map.get(market_trend_info.get("trend", "Neutral"), 0.5)
+        features["trend_strength"] = (market_trend_info.get("trend_score", 0.0) + 1) / 2 # Normalize -1..1 to 0..1
+        features["reversal_probability"] = 0.0 # Placeholder, as this is not in VedicAnalyzer output
+
         # 6. Financial yogas (combinations)
-        yogas = analyze_financial_yogas(planets_data, self.calculator)
+        # yogas = analyze_financial_yogas(planets_data, self.calculator) # Old call
+        yogas_analysis_result = self.yoga_analyzer.analyze_all_financial_yogas(planets_data)
+        all_yogas_list = []
+        if isinstance(yogas_analysis_result, dict):
+            for yoga_type_list in yogas_analysis_result.values():
+                if isinstance(yoga_type_list, list):
+                    all_yogas_list.extend(yoga_type_list)
+        yogas = all_yogas_list # now 'yogas' is a flat list of yoga dicts
         
         # Count yogas by impact type
         bullish_yogas = sum(1 for yoga in yogas if yoga["market_impact"] == "bullish")
@@ -371,7 +393,7 @@ class AstrologicalFeatureGenerator:
             
         return pd.DataFrame(feature_dicts, index=dates)
     
-    # _get_planet_name method removed - now using centralized get_planet_name from constants.py
+    # _get_planet_name method was confirmed to be removed in prior steps.
     
     def _calculate_element_distribution(self, planets_data: Dict) -> Dict[str, float]:
         """

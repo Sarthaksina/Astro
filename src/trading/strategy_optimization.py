@@ -20,13 +20,55 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from joblib import Parallel, delayed
 
-from src.trading.strategy_framework import BaseStrategy, VedicAstrologyStrategy
+from src.trading.strategy_framework import BaseStrategy # VedicAstrologyStrategy removed
 from src.trading.backtest import BacktestEngine
-from src.utils.logger import setup_logger
+from src.utils.logger import get_logger # Changed to get_logger
+from .signal_generator import ( # Added signal generator imports
+    CombinedSignalGenerator,
+    VedicNakshatraSignalGenerator,
+    VedicYogaSignalGenerator,
+    VedicDashaSignalGenerator
+)
+from .constants import DEFAULT_OPTIMIZATION_METRIC
 
 # Configure logging
-logger = setup_logger("strategy_optimization")
+logger = get_logger("strategy_optimization") # Changed to get_logger
 
+# Definition of _OptimizerStrategyWrapper to be added here
+class _OptimizerStrategyWrapper(BaseStrategy):
+    def __init__(self, name: str = "OptimizedStrategy", description: str = "Strategy with configured signal generator",
+                 use_yogas: bool = True, use_nakshatras: bool = True, use_dashas: bool = True,
+                 min_signal_strength: float = 0.6, **kwargs): # Added **kwargs to consume other potential params
+        super().__init__(name, description)
+        # kwargs will contain signal generator configuration
+        self.combined_gen = CombinedSignalGenerator()
+        self.combined_gen.generators = [] # Clear defaults
+        self.combined_gen.weights = {}
+
+        active_generator_details = []
+        # Example default weights if all are active, will be normalized
+        default_weights = {'yoga': 0.4, 'nakshatra': 0.3, 'dasha': 0.3}
+
+        if use_yogas:
+            active_generator_details.append( (VedicYogaSignalGenerator(), default_weights['yoga']) )
+        if use_nakshatras:
+            active_generator_details.append( (VedicNakshatraSignalGenerator(), default_weights['nakshatra']) )
+        if use_dashas:
+            active_generator_details.append( (VedicDashaSignalGenerator(), default_weights['dasha']) )
+
+        total_weight_for_active = sum(details[1] for details in active_generator_details)
+        if active_generator_details:
+            for gen_instance, relative_weight in active_generator_details:
+                self.combined_gen.generators.append(gen_instance)
+                self.combined_gen.weights[gen_instance.name] = relative_weight / total_weight_for_active if total_weight_for_active > 0 else 0
+        else:
+            logger.warning(f"No signal generators selected for {name} in _OptimizerStrategyWrapper. Strategy will produce no signals.")
+            pass
+
+        self.combined_gen.min_signal_strength = min_signal_strength
+
+    def generate_signals(self, market_data: pd.DataFrame, planetary_data: pd.DataFrame) -> pd.DataFrame:
+        return self.combined_gen.generate_signals(market_data, planetary_data)
 
 class StrategyOptimizer:
     """Base class for strategy optimization."""
@@ -51,7 +93,7 @@ class StrategyOptimizer:
         self.best_metrics = {}
     
     def optimize(self, strategy_class, param_space: Dict, 
-                objective: str = "sharpe_ratio", n_trials: int = 100,
+                objective: str = DEFAULT_OPTIMIZATION_METRIC, n_trials: int = 100,
                 timeout: int = None) -> Dict:
         """
         Optimize strategy parameters.
@@ -248,7 +290,7 @@ class VedicStrategyOptimizer(StrategyOptimizer):
         }
         
         # Run optimization
-        best_params = self.optimize(VedicAstrologyStrategy, param_space, 
+        best_params = self.optimize(_OptimizerStrategyWrapper, param_space,
                                    objective="sharpe_ratio", n_trials=n_trials, timeout=timeout)
         
         return best_params
@@ -333,7 +375,7 @@ class VedicStrategyOptimizer(StrategyOptimizer):
             }
             
             # Run optimization
-            best_params = self.optimize(VedicAstrologyStrategy, param_space, 
+            best_params = self.optimize(_OptimizerStrategyWrapper, param_space,
                                       objective="sharpe_ratio", n_trials=n_trials, timeout=timeout)
             
             # Record best parameters

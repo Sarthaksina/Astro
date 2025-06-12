@@ -7,8 +7,9 @@ and cost tracking for cloud GPU instances used in the Cosmic Market Oracle proje
 import os
 import json
 import time
-import logging
+# import logging # Removed
 import yaml
+from src.utils.logger import get_logger # Added
 from src.trading.unified_mcts import MCTS, MCTSPredictor
 from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTSStrategicPlanner, PPOTacticalExecutor
 from pathlib import Path
@@ -20,8 +21,8 @@ import matplotlib.pyplot as plt
 from prometheus_client import start_http_server, Gauge, Counter
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Removed
+logger = get_logger(__name__) # Changed
 
 # Define Prometheus metrics
 GPU_UTILIZATION = Gauge('cosmic_oracle_gpu_utilization', 'GPU Utilization Percentage', ['instance_id', 'gpu_index'])

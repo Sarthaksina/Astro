@@ -19,9 +19,10 @@ from src.trading.modular_hierarchical_rl import ModularHierarchicalRLAgent, MCTS
 from pathlib import Path
 
 from src.pipeline.prediction_pipeline import PredictionPipeline
-from src.data_acquisition.market_data import fetch_historical_data
+# from src.data_acquisition.market_data import fetch_historical_data # Removed
+from src.data_acquisition.financial_data import YahooFinanceDataSource # Added
 from src.astro_engine.planetary_positions import PlanetaryCalculator
-from src.utils.logging_config import get_logger
+from src.utils.logger import get_logger
 
 # Configure logging
 logger = get_logger("api_routes")
@@ -141,10 +142,12 @@ async def get_historical_data(request: HistoricalDataRequest):
         logger.info(f"Fetching historical data for {request.symbol} from {request.start_date} to {request.end_date}")
         
         # Fetch historical market data
-        market_data = fetch_historical_data(
+        yahoo_data_source = YahooFinanceDataSource()
+        market_data = yahoo_data_source.fetch_data(
+            symbol=request.symbol,
             start_date=request.start_date,
-            end_date=request.end_date,
-            symbol=request.symbol
+            end_date=request.end_date
+            # Assuming default interval '1d' from YahooFinanceDataSource.fetch_data is acceptable.
         )
         
         # Include planetary data if requested
@@ -443,30 +446,14 @@ async def get_planetary_aspects(date: str):
         positions = planetary_calculator.get_all_planets(parsed_date)
         
         # Calculate aspects
-        # This would be implemented to calculate aspects between planets
-        # For now, return placeholder aspects
-        aspects = [
-            {
-                "planet1": "Sun",
-                "planet2": "Moon",
-                "aspect_type": "Conjunction",
-                "orb": 2.5,
-                "applying": True,
-                "strength": 0.85
-            },
-            {
-                "planet1": "Jupiter",
-                "planet2": "Saturn",
-                "aspect_type": "Trine",
-                "orb": 1.2,
-                "applying": False,
-                "strength": 0.92
-            }
-        ]
+        # Ensure the get_planetary_aspects method is available on the planetary_calculator instance
+        # The method in PlanetaryCalculator is get_planetary_aspects(self, positions: Dict, orb: float = 6.0)
+        # We can use the default orb or make it a query parameter if needed.
+        calculated_aspects = planetary_calculator.get_planetary_aspects(positions)
         
         return {
             "date": date,
-            "aspects": aspects
+            "aspects": calculated_aspects # Use the actual calculated aspects
         }
     except Exception as e:
         logger.error(f"Error getting planetary aspects: {e}")

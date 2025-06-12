@@ -39,14 +39,16 @@ sys.path.append(str(project_root))
 from src.models.hyperparameter_tuning import OptunaHyperparameterTuner
 from src.data_acquisition.market_data import fetch_historical_data
 from src.data_acquisition.astrological_data import fetch_planetary_positions
-from src.features.feature_generator import generate_features
-from src.utils.logger import setup_logger
+# from src.features.feature_generator import generate_features # This seems to be an incorrect import path or file
+# Assuming it should be:
+from src.feature_engineering.feature_generator import generate_features
+from src.utils.logger import get_logger # Changed
 from src.utils.config import load_config
 from src.models.model_factory import create_model_from_config, get_optimizer, get_scheduler
 from src.evaluation.metrics import calculate_metrics, plot_predictions
 
 # Configure logging
-logger = setup_logger("optimize_and_train")
+logger = get_logger("optimize_and_train") # Changed
 
 def prepare_data(config):
     """

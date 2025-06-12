@@ -99,7 +99,9 @@ class PromptLibrary:
     Library of prompt templates for different astrological scenarios.
     """
     
-    def __init__(self, base_path: str = "data/prompts"):
+    from .constants import DEFAULT_PROMPT_LIBRARY_PATH
+
+    def __init__(self, base_path: str = DEFAULT_PROMPT_LIBRARY_PATH):
         """
         Initialize the prompt library.
         

@@ -18,13 +18,26 @@ from typing import Dict, List, Optional, Union, Tuple
 from datetime import datetime, timedelta
 import os
 
-from src.trading.strategy_framework import BaseStrategy, VedicAstrologyStrategy
-from src.trading.signal_generator import CombinedSignalGenerator, SignalFilter
-from src.utils.logger import setup_logger
+from src.trading.strategy_framework import BaseStrategy # VedicAstrologyStrategy removed
+from src.trading.signal_generator import (
+    CombinedSignalGenerator, SignalFilter,
+    VedicNakshatraSignalGenerator, VedicYogaSignalGenerator, VedicDashaSignalGenerator
+)
+from src.utils.logger import get_logger # Changed to get_logger
 from src.utils.visualization import create_performance_chart
 
+# Helper strategy class for BacktestRunner
+class _ModularStrategy(BaseStrategy):
+    """Helper strategy to wrap a signal generator for BacktestRunner."""
+    def __init__(self, signal_generator_instance, name="Modular Strategy", description="Uses a given signal generator"):
+        super().__init__(name, description)
+        self.signal_generator = signal_generator_instance
+
+    def generate_signals(self, market_data: pd.DataFrame, planetary_data: pd.DataFrame) -> pd.DataFrame:
+        return self.signal_generator.generate_signals(market_data, planetary_data)
+
 # Configure logging
-logger = setup_logger("backtest")
+logger = get_logger("backtest") # Changed to get_logger
 
 
 class BacktestEngine:
@@ -615,16 +628,40 @@ class BacktestRunner:
         Returns:
             Dictionary with backtest results
         """
-        # Create strategy
-        strategy = VedicAstrologyStrategy(
-            name=f"Vedic Strategy (Y:{use_yogas}, N:{use_nakshatras}, D:{use_dashas})"
-        )
+        # Instantiate and Configure CombinedSignalGenerator
+        combined_gen = CombinedSignalGenerator()
+        combined_gen.generators = []  # Clear default generators
+        combined_gen.weights = {}
+
+        active_generator_details = [] # To store (generator_instance, weight_proportion_if_all_active)
         
-        # Configure strategy
-        strategy.use_yogas = use_yogas
-        strategy.use_nakshatras = use_nakshatras
-        strategy.use_dashas = use_dashas
-        strategy.min_signal_strength = min_signal_strength
+        # Define desired weights if all were active
+        default_weights = {'yoga': 0.4, 'nakshatra': 0.3, 'dasha': 0.3}
+
+        if use_yogas:
+            active_generator_details.append( (VedicYogaSignalGenerator(), default_weights['yoga']) )
+        if use_nakshatras:
+            active_generator_details.append( (VedicNakshatraSignalGenerator(), default_weights['nakshatra']) )
+        if use_dashas:
+            active_generator_details.append( (VedicDashaSignalGenerator(), default_weights['dasha']) )
+
+        # Add selected generators and normalize their weights
+        total_weight_for_active = sum(details[1] for details in active_generator_details)
+
+        if active_generator_details:
+            for gen_instance, relative_weight in active_generator_details:
+                combined_gen.generators.append(gen_instance)
+                # Normalize weight based on selected generators
+                combined_gen.weights[gen_instance.name] = relative_weight / total_weight_for_active if total_weight_for_active > 0 else 0
+        else:
+            logger.warning(f"No signal generators selected for Vedic Strategy in BacktestRunner. Strategy will produce no signals.")
+            # combined_gen will remain empty and produce no signals
+
+        combined_gen.min_signal_strength = min_signal_strength
+
+        # Instantiate the Wrapper Strategy
+        strategy_name = f"Modular Vedic (Y:{use_yogas}, N:{use_nakshatras}, D:{use_dashas}, S:{min_signal_strength})"
+        strategy = _ModularStrategy(signal_generator_instance=combined_gen, name=strategy_name)
         
         # Run backtest
         results = self.engine.run_backtest(strategy, self.market_data, self.planetary_data, symbol)

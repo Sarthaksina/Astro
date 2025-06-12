@@ -27,17 +27,14 @@ from typing import Dict, List, Optional, Union
 
 import requests
 import yaml
+# import logging # Removed
+from src.utils.logger import get_logger # Added
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("gpu_instance_manager.log"),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger("gpu_instance_manager")
+# logging.basicConfig(...) # Removed
+logger = get_logger("gpu_instance_manager") # Changed
+# Note: The FileHandler specific to "gpu_instance_manager.log" is not replicated by get_logger by default.
+# If this specific file logging is crucial, setup_logger or manual handler addition would be needed.
 
 # Default configuration
 DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "gpu_instances.yaml"

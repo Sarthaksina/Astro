@@ -10,9 +10,10 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Tuple, Set, Optional, Any, Callable, Union
 from datetime import datetime, timedelta
-import logging
+# import logging # Removed
 import os
 from pathlib import Path
+from src.utils.logger import get_logger # Added
 import json
 
 from .astrological_features import AstrologicalFeatureGenerator
@@ -32,11 +33,11 @@ class CyclicalFeatureManager:
         self.planetary_cycle_extractor = None  # Will be initialized later
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig( # Removed
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+logger = get_logger(__name__) # Changed
 
 
 class AdvancedFeatureEngineeringManager:

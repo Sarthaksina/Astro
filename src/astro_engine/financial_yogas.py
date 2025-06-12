@@ -13,7 +13,7 @@ import math
 from .planetary_positions import PlanetaryCalculator
 from .constants import (
     SUN, MOON, MERCURY, VENUS, MARS, JUPITER, SATURN, RAHU, KETU,
-    get_planet_name
+    get_planet_name, get_sign_ruler
 )
 from .vedic_dignities import calculate_dignity_state, check_combustion
 
@@ -87,7 +87,7 @@ class FinancialYogaAnalyzer:
                         yogas.append({
                             "name": "Benefic Conjunction",
                             "strength": 70,
-                            "description": f"Conjunction of {get_planet_name(planet1)} and {get_planet_name(planet2)} indicates financial growth",
+                            "description": f"Conjunction of {get_planet_name(planet1)} and {get_planet_name(planet2)} indicates financial growth", # Already correct
                             "market_impact": "bullish",
                             "planets_involved": [planet1, planet2]
                         })
@@ -147,7 +147,7 @@ class FinancialYogaAnalyzer:
                         yogas.append({
                             "name": "Viparita Raja Yoga",
                             "strength": 75,
-                            "description": f"Opposition of {self._get_planet_name(planet1)} and {self._get_planet_name(planet2)} indicates unexpected market reversals",
+                            "description": f"Opposition of {get_planet_name(planet1)} and {get_planet_name(planet2)} indicates unexpected market reversals",
                             "market_impact": "volatile",
                             "planets_involved": [planet1, planet2]
                         })
@@ -161,7 +161,7 @@ class FinancialYogaAnalyzer:
                 if dignity["state"] == "debilitated":
                     # Check if lord of the sign is strong
                     sign = int(longitude / 30)
-                    sign_lord = self._get_sign_lord(sign)
+                    sign_lord = get_sign_ruler(sign) # Changed here
                     
                     if sign_lord in positions:
                         lord_longitude = positions[sign_lord]["longitude"]
@@ -171,7 +171,7 @@ class FinancialYogaAnalyzer:
                             yogas.append({
                                 "name": "Neecha Bhanga Raja Yoga",
                                 "strength": 65,
-                                "description": f"Debilitated {self._get_planet_name(planet)} with strong {self._get_planet_name(sign_lord)} indicates recovery from market lows",
+                                "description": f"Debilitated {get_planet_name(planet)} with strong {get_planet_name(sign_lord)} indicates recovery from market lows",
                                 "market_impact": "bullish",
                                 "planets_involved": [planet, sign_lord]
                             })
@@ -383,24 +383,7 @@ class FinancialYogaAnalyzer:
         }
     
     # _get_planet_name method removed - now using centralized get_planet_name from constants.py
-    
-    def _get_sign_lord(self, sign: int) -> int:
-        """Get the lord of a sign."""
-        sign_lords = {
-            0: MARS,      # Aries
-            1: VENUS,     # Taurus
-            2: MERCURY,   # Gemini
-            3: MOON,      # Cancer
-            4: SUN,       # Leo
-            5: MERCURY,   # Virgo
-            6: VENUS,     # Libra
-            7: MARS,      # Scorpio
-            8: JUPITER,   # Sagittarius
-            9: SATURN,    # Capricorn
-            10: SATURN,   # Aquarius
-            11: JUPITER   # Pisces
-        }
-        return sign_lords.get(sign, SUN)
+    # _get_sign_lord method removed - now using centralized get_sign_ruler from constants.py
 
 
 # Example usage

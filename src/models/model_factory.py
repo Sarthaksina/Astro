@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Union, Any, Tuple
 
 # Import model implementations
 from src.models.time_series import AttentionBiLSTM, TemporalConvNet, WaveNetModel
-from src.models.transformers import AstroEconomicTransformer, AstroEventDetectionTransformer
+# from src.models.transformers import AstroEconomicTransformer, AstroEventDetectionTransformer # Removed
 from src.models.advanced_architectures import (
     TransformerModel,
     GNNModel,
@@ -52,10 +52,10 @@ class ModelFactory:
             return self._create_tcn_model()
         elif self.model_type == 'wavenet':
             return self._create_wavenet_model()
-        elif self.model_type == 'transformer':
-            return self._create_transformer_model()
-        elif self.model_type == 'event_transformer':
-            return self._create_event_transformer_model()
+        # elif self.model_type == 'transformer': # Removed
+            # return self._create_transformer_model() # Removed
+        # elif self.model_type == 'event_transformer': # Removed
+            # return self._create_event_transformer_model() # Removed
         elif self.model_type == 'advanced_transformer':
             return self._create_advanced_transformer_model()
         elif self.model_type == 'gnn':
@@ -148,53 +148,9 @@ class ModelFactory:
         
         return model.to(self.device)
     
-    def _create_transformer_model(self) -> AstroEconomicTransformer:
-        """
-        Create and configure an AstroEconomic Transformer model.
-        
-        Returns:
-            Configured transformer model
-        """
-        model_config = self.config.get('transformer_config', {})
-        
-        # Get planetary cycles if provided
-        planetary_cycles = model_config.get('planetary_cycles', None)
-        
-        model = AstroEconomicTransformer(
-            d_model=model_config.get('d_model', 256),
-            num_heads=model_config.get('num_heads', 8),
-            num_layers=model_config.get('num_layers', 6),
-            d_ff=model_config.get('d_ff', 1024),
-            max_seq_len=model_config.get('max_seq_len', 365),
-            dropout=model_config.get('dropout', 0.1),
-            num_market_features=model_config.get('num_market_features', 10),
-            num_astro_features=model_config.get('num_astro_features', 20),
-            output_dim=model_config.get('output_dim', 1),
-            planetary_cycles=planetary_cycles
-        )
-        
-        return model.to(self.device)
+    # Removed _create_transformer_model method
     
-    def _create_event_transformer_model(self) -> AstroEventDetectionTransformer:
-        """
-        Create and configure an AstroEventDetection Transformer model.
-        
-        Returns:
-            Configured event detection transformer model
-        """
-        model_config = self.config.get('event_transformer_config', {})
-        
-        model = AstroEventDetectionTransformer(
-            d_model=model_config.get('d_model', 256),
-            num_heads=model_config.get('num_heads', 8),
-            num_layers=model_config.get('num_layers', 4),
-            num_astro_events=model_config.get('num_astro_events', 10),
-            max_seq_len=model_config.get('max_seq_len', 365),
-            dropout=model_config.get('dropout', 0.1),
-            num_features=model_config.get('num_features', 30)
-        )
-        
-        return model.to(self.device)
+    # Removed _create_event_transformer_model method
         
     def _create_advanced_transformer_model(self) -> TransformerModel:
         """

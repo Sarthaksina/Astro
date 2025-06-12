@@ -32,12 +32,19 @@ class LLMProvider:
     Provider for Large Language Model API access.
     """
     
+    from .constants import (
+        DEFAULT_LLM_PROVIDER,
+        DEFAULT_LLM_MODEL,
+        DEFAULT_MAX_TOKENS,
+        DEFAULT_TEMPERATURE
+    )
+
     def __init__(self, 
-                 provider: str = "openai",
+                 provider: str = DEFAULT_LLM_PROVIDER,
                  api_key: Optional[str] = None,
-                 model: str = "gpt-4",
-                 max_tokens: int = 1000,
-                 temperature: float = 0.7):
+                 model: str = DEFAULT_LLM_MODEL,
+                 max_tokens: int = DEFAULT_MAX_TOKENS,
+                 temperature: float = DEFAULT_TEMPERATURE):
         """
         Initialize the LLM provider.
         
